@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Grid, ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
+import { Container, Grid, ThemeProvider, createTheme, CssBaseline, Box, Tab, Tabs } from '@mui/material';
 import Map from './components/Map';
 import ClimateControls from './components/ClimateControls';
 import DataVisualization from './components/DataVisualization';
+import EconomicImpact from './components/EconomicImpact';
+import EnergyMixSimulator from './components/EnergyMixSimulator';
+import DisasterSimulator from './components/DisasterSimulator';
+import GreenhouseEffect from './components/GreenhouseEffect';
 import { calculateClimateData, calculateRiskLevels } from './services/climateService';
 
 const theme = createTheme({
@@ -44,16 +48,34 @@ function App() {
     fires: 0,
     storms: 0,
   });
+  const [activeTab, setActiveTab] = useState(0);
+  const [economicData, setEconomicData] = useState({
+    economicGrowth: 0,
+    populationAffected: 0,
+    gdpImpact: 0,
+    agriculturalLoss: 0,
+    waterScarcity: 0,
+    disasterRisk: 0
+  });
+  const [movingAverageWindow, setMovingAverageWindow] = useState(20);
 
   useEffect(() => {
     const data = calculateClimateData(selectedScenario, selectedEnergyMix, 2025, 2100);
     setClimateData(data);
     
-    // Berechne Risiko-Level basierend auf der Temperatur für das ausgewählte Jahr
     const yearIndex = data.years.indexOf(selectedYear);
     const currentTemp = data.temperature[yearIndex];
     const risks = calculateRiskLevels(currentTemp);
     setRiskLevels(risks);
+
+    setEconomicData({
+      economicGrowth: Math.min(100, Math.round(currentTemp * 15)),
+      populationAffected: Math.min(100, Math.round(currentTemp * 20)),
+      gdpImpact: Math.min(100, Math.round(currentTemp * 18)),
+      agriculturalLoss: Math.min(100, Math.round(currentTemp * 25)),
+      waterScarcity: Math.min(100, Math.round(currentTemp * 22)),
+      disasterRisk: Math.min(100, Math.round(currentTemp * 20))
+    });
   }, [selectedScenario, selectedEnergyMix, selectedYear]);
 
   const handleScenarioChange = (scenario) => {
@@ -66,6 +88,19 @@ function App() {
 
   const handleEnergyMixChange = (mix) => {
     setSelectedEnergyMix(mix);
+  };
+
+  const handleDetailedEnergyMixChange = (mixData) => {
+    const renewable = mixData.solar + mixData.wind + mixData.hydro;
+    const fossil = mixData.fossil;
+    
+    if (renewable > 70) {
+      setSelectedEnergyMix('renewable');
+    } else if (fossil > 50) {
+      setSelectedEnergyMix('fossil');
+    } else {
+      setSelectedEnergyMix('mixed');
+    }
   };
 
   return (
@@ -93,8 +128,48 @@ function App() {
                 riskLevels={riskLevels}
               />
             </Grid>
+            
             <Grid item xs={12}>
-              <DataVisualization data={climateData} />
+              <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+                <Tabs 
+                  value={activeTab} 
+                  onChange={(e, newValue) => setActiveTab(newValue)}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                >
+                  <Tab label="Klimadaten" />
+                  <Tab label="Treibhauseffekt" />
+                  <Tab label="Wirtschaftliche Auswirkungen" />
+                  <Tab label="Energiemix-Simulator" />
+                  <Tab label="Naturkatastrophen" />
+                </Tabs>
+              </Box>
+
+              {activeTab === 0 && (
+                <DataVisualization data={climateData} />
+              )}
+
+              {activeTab === 1 && (
+                <GreenhouseEffect 
+                  climateData={climateData}
+                  onWindowSizeChange={setMovingAverageWindow}
+                />
+              )}
+              
+              {activeTab === 2 && (
+                <EconomicImpact data={economicData} />
+              )}
+              
+              {activeTab === 3 && (
+                <EnergyMixSimulator onEnergyMixChange={handleDetailedEnergyMixChange} />
+              )}
+              
+              {activeTab === 4 && (
+                <DisasterSimulator 
+                  temperature={climateData && climateData.temperature[climateData.years.indexOf(selectedYear)]}
+                  year={selectedYear}
+                />
+              )}
             </Grid>
           </Grid>
         </Container>
