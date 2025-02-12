@@ -89,7 +89,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact 📧
 
-Timothy - [@ttvtimotheus](https://twitter.com/ttvtimotheus)
+Timo Haseloff - [Mail](mailto:info@t-haseloff.de)
 
 ## Project Link 🔗
 
