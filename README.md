@@ -38,10 +38,10 @@ An interactive web application for visualizing and simulating climate change imp
 
 ```bash
 # Clone repository
-git clone https://github.com/ttvtimotheus/climate-change-visualization.git
+git clone https://github.com/ttvtimotheus/climatechange.git
 
 # Change into project directory
-cd climate-change-visualization
+cd climatechange
 
 # Install dependencies
 npm install
@@ -88,9 +88,8 @@ Contributions are welcome! Please follow these steps:
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contact 📧
-
 Timo Haseloff - [Mail](mailto:info@t-haseloff.de)
 
 ## Project Link 🔗
 
-[https://github.com/ttvtimotheus/climate-change-visualization](https://github.com/ttvtimotheus/climate-change-visualization)
+[https://github.com/ttvtimotheus/climatechange](https://github.com/ttvtimotheus/climatechange
