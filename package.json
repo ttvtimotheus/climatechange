@@ -1,7 +1,7 @@
 {
   "name": "climatechange",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,11 +13,12 @@
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.15.6",
-    "@mui/material": "^5.15.6",
     "@mui/lab": "^5.0.0-alpha.162",
+    "@mui/material": "^5.15.6",
     "axios": "^1.7.9",
     "chart.js": "^4.4.1",
     "framer-motion": "^11.0.3",
+    "globe.gl": "^2.32.1",
     "leaflet": "^1.9.4",
     "notistack": "^3.0.1",
     "react": "^18.2.0",
@@ -25,7 +26,8 @@
     "react-dom": "^18.2.0",
     "react-leaflet": "^4.2.1",
     "react-spring": "^9.7.3",
-    "recharts": "^2.10.4"
+    "recharts": "^2.10.4",
+    "three": "^0.161.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
