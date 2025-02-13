@@ -12,30 +12,42 @@ const cities = [
   { label: 'Cape Town', lat: -33.9249, lng: 18.4241 }
 ];
 
-export const generateGlobeData = (scenario, year) => {
-  // Basis-Temperaturanstieg pro Jahr (°C)
-  const baseIncrease = {
-    moderate: 0.03,
-    optimistic: 0.02,
-    pessimistic: 0.04
-  }[scenario] || 0.03;
+// Temperaturanstieg pro Jahr für verschiedene Szenarien
+const SCENARIO_CONFIGS = {
+  optimistic: {
+    baseIncrease: 0.02,  // 0.02°C pro Jahr = ~1.5°C bis 2100
+    variability: 0.3,    // ±30% Variation zwischen Regionen
+    polarEffect: 1.2     // 20% stärkere Erwärmung an den Polen
+  },
+  moderate: {
+    baseIncrease: 0.035, // 0.035°C pro Jahr = ~2.6°C bis 2100
+    variability: 0.4,    // ±40% Variation zwischen Regionen
+    polarEffect: 1.5     // 50% stärkere Erwärmung an den Polen
+  },
+  pessimistic: {
+    baseIncrease: 0.055, // 0.055°C pro Jahr = ~4.1°C bis 2100
+    variability: 0.5,    // ±50% Variation zwischen Regionen
+    polarEffect: 2.0     // 100% stärkere Erwärmung an den Polen
+  }
+};
 
-  // Jahre seit 2025
+export const generateGlobeData = (scenario = 'moderate', year) => {
+  const config = SCENARIO_CONFIGS[scenario] || SCENARIO_CONFIGS.moderate;
   const yearsSince2025 = year - 2025;
   
-  // Generiere Daten für jede Stadt
   return cities.map(city => {
     // Basis-Temperaturanstieg
-    let value = yearsSince2025 * baseIncrease;
+    let value = yearsSince2025 * config.baseIncrease;
     
-    // Füge etwas Variation basierend auf der Latitude hinzu
-    // Höhere Breitengrade erwärmen sich schneller
+    // Pol-Effekt: Stärkere Erwärmung in höheren Breitengraden
     const latitudeFactor = Math.abs(city.lat) / 90;
-    value *= (1 + latitudeFactor);
+    value *= (1 + (latitudeFactor * (config.polarEffect - 1)));
     
-    // Füge etwas zufällige Variation hinzu
-    value *= (0.8 + Math.random() * 0.4);
+    // Regionale Variation
+    const randomFactor = 1 + (Math.random() * 2 - 1) * config.variability;
+    value *= randomFactor;
     
+    // Sicherstellen, dass der Wert nicht negativ wird
     return {
       ...city,
       value: Math.max(0, value)

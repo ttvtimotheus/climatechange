@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, LayerGroup, Circle, Popup, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Box, ToggleButton, ToggleButtonGroup, Tooltip, IconButton, Slider } from '@mui/material';
-import { ThreeDRotation, Map as MapIcon, PlayArrow, Pause } from '@mui/icons-material';
+import { Box, ToggleButton, ToggleButtonGroup, Tooltip, IconButton, Slider, ButtonGroup, Button } from '@mui/material';
+import { ThreeDRotation, Map as MapIcon, PlayArrow, Pause, TrendingUp, TrendingDown, Timeline } from '@mui/icons-material';
 import GlobeComponent from './Globe';
 import { generateGlobeData } from '../services/globeService';
 
@@ -16,6 +16,24 @@ const getRiskColor = (risk) => {
 const YEAR_MIN = 2025;
 const YEAR_MAX = 2100;
 const ANIMATION_INTERVAL = 500; // milliseconds
+
+const SCENARIOS = {
+  optimistic: {
+    label: 'Optimistisch',
+    icon: <TrendingDown />,
+    description: 'Paris-Ziele werden erreicht'
+  },
+  moderate: {
+    label: 'Moderat',
+    icon: <Timeline />,
+    description: 'Teilweise Emissionsreduktion'
+  },
+  pessimistic: {
+    label: 'Pessimistisch',
+    icon: <TrendingUp />,
+    description: 'Weiter wie bisher'
+  }
+};
 
 const Map = ({ 
   climateData = {},
@@ -55,6 +73,7 @@ const Map = ({
   const [viewMode, setViewMode] = useState('3D');
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentYear, setCurrentYear] = useState(selectedYear);
+  const [scenario, setScenario] = useState('moderate');
   const [globeData, setGlobeData] = useState([]);
   
   const handleViewModeChange = (event, newMode) => {
@@ -63,16 +82,16 @@ const Map = ({
     }
   };
 
-  const updateGlobeData = useCallback((year) => {
-    const data = generateGlobeData('moderate', year);
+  const updateGlobeData = useCallback((year, currentScenario) => {
+    const data = generateGlobeData(currentScenario, year);
     setGlobeData(data);
   }, []);
 
   // Handle year changes
   useEffect(() => {
     setCurrentYear(selectedYear);
-    updateGlobeData(selectedYear);
-  }, [selectedYear, updateGlobeData]);
+    updateGlobeData(selectedYear, scenario);
+  }, [selectedYear, updateGlobeData, scenario]);
 
   // Animation effect
   useEffect(() => {
@@ -99,11 +118,11 @@ const Map = ({
 
   // Update data when year changes during animation
   useEffect(() => {
-    updateGlobeData(currentYear);
+    updateGlobeData(currentYear, scenario);
     if (onYearChange) {
       onYearChange(currentYear);
     }
-  }, [currentYear, updateGlobeData, onYearChange]);
+  }, [currentYear, updateGlobeData, onYearChange, scenario]);
 
   const handleSliderChange = (event, newValue) => {
     setCurrentYear(newValue);
@@ -113,8 +132,13 @@ const Map = ({
     setIsPlaying(prev => !prev);
   };
 
+  const handleScenarioChange = (newScenario) => {
+    setScenario(newScenario);
+  };
+
   return (
     <Box sx={{ position: 'relative', width: '100%', height: '600px' }}>
+      {/* View Mode Toggle */}
       <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 1000 }}>
         <ToggleButtonGroup
           value={viewMode}
@@ -137,6 +161,38 @@ const Map = ({
         </ToggleButtonGroup>
       </Box>
 
+      {/* Scenario Selector */}
+      <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 1000 }}>
+        <ButtonGroup 
+          variant="contained" 
+          size="small"
+          sx={{ 
+            bgcolor: 'background.paper', 
+            boxShadow: 2,
+            '& .MuiButton-root': {
+              textTransform: 'none'
+            }
+          }}
+        >
+          {Object.entries(SCENARIOS).map(([key, { label, icon, description }]) => (
+            <Button
+              key={key}
+              onClick={() => handleScenarioChange(key)}
+              variant={scenario === key ? 'contained' : 'outlined'}
+              startIcon={icon}
+              sx={{
+                bgcolor: scenario === key ? 'primary.main' : 'background.paper'
+              }}
+            >
+              <Tooltip title={description}>
+                <span>{label}</span>
+              </Tooltip>
+            </Button>
+          ))}
+        </ButtonGroup>
+      </Box>
+
+      {/* Globe/Map View */}
       <Box sx={{ width: '100%', height: '100%' }}>
         {viewMode === '3D' ? (
           <GlobeComponent
