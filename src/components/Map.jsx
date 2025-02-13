@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, LayerGroup, Circle, Popup, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Box, ToggleButton, ToggleButtonGroup, Tooltip } from '@mui/material';
-import { ThreeDRotation, Map as MapIcon } from '@mui/icons-material';
+import { Box, ToggleButton, ToggleButtonGroup, Tooltip, IconButton, Slider } from '@mui/material';
+import { ThreeDRotation, Map as MapIcon, PlayArrow, Pause } from '@mui/icons-material';
 import GlobeComponent from './Globe';
 import { generateGlobeData } from '../services/globeService';
 
@@ -13,10 +13,15 @@ const getRiskColor = (risk) => {
                     '#91cf60';
 };
 
+const YEAR_MIN = 2025;
+const YEAR_MAX = 2100;
+const ANIMATION_INTERVAL = 500; // milliseconds
+
 const Map = ({ 
   climateData = {},
   selectedYear = 2025,
-  riskLevels = { drought: 0, flooding: 0, fires: 0, storms: 0 }
+  riskLevels = { drought: 0, flooding: 0, fires: 0, storms: 0 },
+  onYearChange
 }) => {
   const [cities, setCities] = useState([
     { name: 'Berlin', coords: [52.5200, 13.4050], population: 3.7 },
@@ -48,6 +53,9 @@ const Map = ({
   };
 
   const [viewMode, setViewMode] = useState('3D');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentYear, setCurrentYear] = useState(selectedYear);
+  const [globeData, setGlobeData] = useState([]);
   
   const handleViewModeChange = (event, newMode) => {
     if (newMode !== null) {
@@ -55,7 +63,55 @@ const Map = ({
     }
   };
 
-  const globeData = generateGlobeData('moderate', selectedYear);
+  const updateGlobeData = useCallback((year) => {
+    const data = generateGlobeData('moderate', year);
+    setGlobeData(data);
+  }, []);
+
+  // Handle year changes
+  useEffect(() => {
+    setCurrentYear(selectedYear);
+    updateGlobeData(selectedYear);
+  }, [selectedYear, updateGlobeData]);
+
+  // Animation effect
+  useEffect(() => {
+    let animationFrame;
+    
+    const animate = () => {
+      if (isPlaying) {
+        setCurrentYear(prev => {
+          const next = prev + 1;
+          if (next > YEAR_MAX) {
+            setIsPlaying(false);
+            return YEAR_MIN;
+          }
+          return next;
+        });
+      }
+    };
+
+    if (isPlaying) {
+      const interval = setInterval(animate, ANIMATION_INTERVAL);
+      return () => clearInterval(interval);
+    }
+  }, [isPlaying]);
+
+  // Update data when year changes during animation
+  useEffect(() => {
+    updateGlobeData(currentYear);
+    if (onYearChange) {
+      onYearChange(currentYear);
+    }
+  }, [currentYear, updateGlobeData, onYearChange]);
+
+  const handleSliderChange = (event, newValue) => {
+    setCurrentYear(newValue);
+  };
+
+  const handlePlayPause = () => {
+    setIsPlaying(prev => !prev);
+  };
 
   return (
     <Box sx={{ position: 'relative', width: '100%', height: '600px' }}>
@@ -85,7 +141,7 @@ const Map = ({
         {viewMode === '3D' ? (
           <GlobeComponent
             data={globeData}
-            year={selectedYear}
+            year={currentYear}
             width="100%"
             height="600px"
           />
@@ -142,6 +198,38 @@ const Map = ({
             />
           </MapContainer>
         )}
+      </Box>
+
+      {/* Time Controls */}
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 16,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '80%',
+          maxWidth: 600,
+          bgcolor: 'background.paper',
+          borderRadius: 2,
+          p: 2,
+          boxShadow: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2
+        }}
+      >
+        <IconButton onClick={handlePlayPause} color="primary">
+          {isPlaying ? <Pause /> : <PlayArrow />}
+        </IconButton>
+        <Slider
+          value={currentYear}
+          min={YEAR_MIN}
+          max={YEAR_MAX}
+          onChange={handleSliderChange}
+          valueLabelDisplay="on"
+          valueLabelFormat={value => `${value}`}
+          sx={{ flexGrow: 1 }}
+        />
       </Box>
     </Box>
   );

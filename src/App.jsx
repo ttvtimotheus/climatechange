@@ -74,6 +74,13 @@ function App() {
 
   const handleYearChange = (year) => {
     setSelectedYear(year);
+    const factor = (year - 2025) / (2100 - 2025);
+    setRiskLevels({
+      drought: Math.min(100, Math.round(30 + factor * 50)),
+      flooding: Math.min(100, Math.round(45 + factor * 40)),
+      fires: Math.min(100, Math.round(60 + factor * 30)),
+      storms: Math.min(100, Math.round(40 + factor * 45))
+    });
   };
 
   const handleEnergyMixChange = (mix) => {
@@ -122,6 +129,7 @@ function App() {
                   climateData={climateData}
                   selectedYear={selectedYear}
                   riskLevels={riskLevels}
+                  onYearChange={handleYearChange}
                 />
               </Paper>
             </Box>
