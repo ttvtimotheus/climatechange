@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, LayerGroup, Circle, Popup, GeoJSON } from 'rea
 import 'leaflet/dist/leaflet.css';
 import { Box, ToggleButton, ToggleButtonGroup, Tooltip } from '@mui/material';
 import { ThreeDRotation, Map as MapIcon } from '@mui/icons-material';
-import Globe from './Globe';
+import GlobeComponent from './Globe';
 import { generateGlobeData } from '../services/globeService';
 
 const getRiskColor = (risk) => {
@@ -83,7 +83,7 @@ const Map = ({
 
       <Box sx={{ width: '100%', height: '100%' }}>
         {viewMode === '3D' ? (
-          <Globe
+          <GlobeComponent
             data={globeData}
             year={selectedYear}
             width="100%"
