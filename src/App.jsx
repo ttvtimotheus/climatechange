@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Grid, ThemeProvider, createTheme, CssBaseline, Box, Tab, Tabs } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { CssBaseline, Box, Tab, Tabs, Paper } from '@mui/material';
+import { SnackbarProvider } from 'notistack';
+import { motion, AnimatePresence } from 'framer-motion';
+import theme from './theme';
+import Layout from './components/Layout';
 import Map from './components/Map';
 import ClimateControls from './components/ClimateControls';
 import DataVisualization from './components/DataVisualization';
@@ -9,35 +14,8 @@ import DisasterSimulator from './components/DisasterSimulator';
 import GreenhouseEffect from './components/GreenhouseEffect';
 import { calculateClimateData, calculateRiskLevels } from './services/climateService';
 
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#2e7d32',
-    },
-    secondary: {
-      main: '#0288d1',
-    },
-    background: {
-      default: '#f5f5f5',
-      paper: '#ffffff',
-    },
-  },
-  shape: {
-    borderRadius: 12,
-  },
-  components: {
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          boxShadow: '0 0 20px rgba(0,0,0,0.05)',
-        },
-      },
-    },
-  },
-});
-
 function App() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState('moderate');
   const [selectedYear, setSelectedYear] = useState(2025);
   const [selectedEnergyMix, setSelectedEnergyMix] = useState('mixed');
@@ -58,6 +36,18 @@ function App() {
     disasterRisk: 0
   });
   const [movingAverageWindow, setMovingAverageWindow] = useState(20);
+
+  const customTheme = React.useMemo(
+    () =>
+      createTheme({
+        ...theme,
+        palette: {
+          ...theme.palette,
+          mode: isDarkMode ? 'dark' : 'light',
+        },
+      }),
+    [isDarkMode]
+  );
 
   useEffect(() => {
     const data = calculateClimateData(selectedScenario, selectedEnergyMix, 2025, 2100);
@@ -103,77 +93,116 @@ function App() {
     }
   };
 
+  const handleToggleTheme = () => {
+    setIsDarkMode((prev) => !prev);
+  };
+
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Box sx={{ 
-        minHeight: '100vh',
-        py: 4,
-        backgroundColor: 'background.default'
-      }}>
-        <Container maxWidth="xl">
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
-              <Map
-                climateData={climateData}
-                selectedYear={selectedYear}
-                riskLevels={riskLevels}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <ClimateControls
-                onScenarioChange={handleScenarioChange}
-                onYearChange={handleYearChange}
-                onEnergyMixChange={handleEnergyMixChange}
-                riskLevels={riskLevels}
-              />
-            </Grid>
-            
-            <Grid item xs={12}>
-              <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-                <Tabs 
-                  value={activeTab} 
-                  onChange={(e, newValue) => setActiveTab(newValue)}
-                  variant="scrollable"
-                  scrollButtons="auto"
-                >
-                  <Tab label="Klimadaten" />
-                  <Tab label="Treibhauseffekt" />
-                  <Tab label="Wirtschaftliche Auswirkungen" />
-                  <Tab label="Energiemix-Simulator" />
-                  <Tab label="Naturkatastrophen" />
-                </Tabs>
-              </Box>
-
-              {activeTab === 0 && (
-                <DataVisualization data={climateData} />
-              )}
-
-              {activeTab === 1 && (
-                <GreenhouseEffect 
+    <ThemeProvider theme={customTheme}>
+      <SnackbarProvider 
+        maxSnack={3} 
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+      >
+        <CssBaseline />
+        <Layout onToggleTheme={handleToggleTheme} isDarkMode={isDarkMode}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+            <Box sx={{ flex: { xs: '1', md: '2' } }}>
+              <Paper 
+                component={motion.div}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                elevation={2}
+                sx={{ overflow: 'hidden', height: '100%' }}
+              >
+                <Map
                   climateData={climateData}
-                  onWindowSizeChange={setMovingAverageWindow}
+                  selectedYear={selectedYear}
+                  riskLevels={riskLevels}
                 />
-              )}
-              
-              {activeTab === 2 && (
-                <EconomicImpact data={economicData} />
-              )}
-              
-              {activeTab === 3 && (
-                <EnergyMixSimulator onEnergyMixChange={handleDetailedEnergyMixChange} />
-              )}
-              
-              {activeTab === 4 && (
-                <DisasterSimulator 
-                  temperature={climateData && climateData.temperature[climateData.years.indexOf(selectedYear)]}
-                  year={selectedYear}
+              </Paper>
+            </Box>
+            <Box sx={{ flex: '1' }}>
+              <Paper 
+                component={motion.div}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                elevation={2}
+                sx={{ p: 3 }}
+              >
+                <ClimateControls
+                  onScenarioChange={handleScenarioChange}
+                  onYearChange={handleYearChange}
+                  onEnergyMixChange={handleEnergyMixChange}
+                  riskLevels={riskLevels}
                 />
-              )}
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
+              </Paper>
+            </Box>
+          </Box>
+          
+          <Paper 
+            elevation={2} 
+            sx={{ mt: 3, overflow: 'hidden' }}
+          >
+            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+              <Tabs 
+                value={activeTab} 
+                onChange={(e, newValue) => setActiveTab(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                  px: 2,
+                  '& .MuiTab-root': {
+                    minHeight: 64,
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                  },
+                }}
+              >
+                <Tab label="Climate Data" />
+                <Tab label="Greenhouse Effect" />
+                <Tab label="Economic Impact" />
+                <Tab label="Energy Mix" />
+                <Tab label="Natural Disasters" />
+              </Tabs>
+            </Box>
+
+            <Box sx={{ p: 3 }}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {activeTab === 0 && <DataVisualization data={climateData} />}
+                  {activeTab === 1 && (
+                    <GreenhouseEffect 
+                      climateData={climateData}
+                      onWindowSizeChange={setMovingAverageWindow}
+                    />
+                  )}
+                  {activeTab === 2 && <EconomicImpact data={economicData} />}
+                  {activeTab === 3 && (
+                    <EnergyMixSimulator onEnergyMixChange={handleDetailedEnergyMixChange} />
+                  )}
+                  {activeTab === 4 && (
+                    <DisasterSimulator 
+                      temperature={climateData?.temperature[climateData.years.indexOf(selectedYear)] || 0}
+                      year={selectedYear}
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </Box>
+          </Paper>
+        </Layout>
+      </SnackbarProvider>
     </ThemeProvider>
   );
 }
