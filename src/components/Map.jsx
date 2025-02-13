@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { Box, ToggleButton, ToggleButtonGroup, Tooltip, IconButton, Slider, ButtonGroup, Button } from '@mui/material';
 import { ThreeDRotation, Map as MapIcon, PlayArrow, Pause, TrendingUp, TrendingDown, Timeline } from '@mui/icons-material';
 import GlobeComponent from './Globe';
+import RegionalStats from './RegionalStats';
 import { generateGlobeData } from '../services/globeService';
 
 const getRiskColor = (risk) => {
@@ -193,67 +194,43 @@ const Map = ({
       </Box>
 
       {/* Globe/Map View */}
-      <Box sx={{ width: '100%', height: '100%' }}>
-        {viewMode === '3D' ? (
-          <GlobeComponent
-            data={globeData}
-            year={currentYear}
-            width="100%"
-            height="600px"
-          />
-        ) : (
-          <MapContainer
-            center={[51.1657, 10.4515]}
-            zoom={6}
-            style={{ height: '100%', width: '100%', borderRadius: '12px' }}
-          >
-            <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
-            
-            {/* Risiko-Overlays für Städte */}
-            <LayerGroup>
-              {cities.map((city) => (
-                <Circle
-                  key={city.name}
-                  center={city.coords}
-                  radius={city.population * 10000}
-                  pathOptions={{
-                    color: getRiskColor(riskLevels.drought),
-                    fillColor: getRiskColor(riskLevels.drought),
-                    fillOpacity: 0.4
-                  }}
-                >
-                  <Popup>
-                    <div style={{ padding: '10px' }}>
-                      <h3 style={{ margin: '0 0 10px 0' }}>{city.name}</h3>
-                      <p style={{ margin: '5px 0' }}>Bevölkerung: {city.population}M</p>
-                      <p style={{ margin: '5px 0' }}>Risiko-Level:</p>
-                      <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
-                        <li>Dürre: {riskLevels.drought}%</li>
-                        <li>Überflutung: {riskLevels.flooding}%</li>
-                        <li>Waldbrände: {riskLevels.fires}%</li>
-                        <li>Stürme: {riskLevels.storms}%</li>
-                      </ul>
-                    </div>
-                  </Popup>
-                </Circle>
-              ))}
-            </LayerGroup>
+      <Box sx={{ 
+        width: '100%', 
+        height: '100%',
+        display: 'flex',
+        gap: 2
+      }}>
+        {/* Regional Stats */}
+        <Box sx={{ 
+          display: { xs: 'none', md: 'block' },
+          height: '100%',
+          overflowY: 'auto'
+        }}>
+          <RegionalStats data={globeData} year={currentYear} />
+        </Box>
 
-            {/* Überflutungszonen */}
-            <GeoJSON
-              data={floodZones}
-              style={() => ({
-                color: '#1a237e',
-                weight: 1,
-                fillColor: '#3949ab',
-                fillOpacity: 0.3
-              })}
+        {/* Globe */}
+        <Box sx={{ flexGrow: 1, height: '100%' }}>
+          {viewMode === '3D' ? (
+            <GlobeComponent
+              data={globeData}
+              year={currentYear}
+              width="100%"
+              height="600px"
             />
-          </MapContainer>
-        )}
+          ) : (
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              height: '100%',
+              bgcolor: 'background.paper',
+              borderRadius: 2
+            }}>
+              2D Map View (coming soon)
+            </Box>
+          )}
+        </Box>
       </Box>
 
       {/* Time Controls */}
