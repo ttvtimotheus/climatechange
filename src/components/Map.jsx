@@ -1,18 +1,22 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { MapContainer, TileLayer, LayerGroup, Circle, Popup, GeoJSON } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import { Box, ToggleButton, ToggleButtonGroup, Tooltip, IconButton, Slider, ButtonGroup, Button } from '@mui/material';
-import { ThreeDRotation, Map as MapIcon, PlayArrow, Pause, TrendingUp, TrendingDown, Timeline } from '@mui/icons-material';
-import GlobeComponent from './Globe';
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  Box, 
+  IconButton, 
+  Slider,
+  ButtonGroup,
+  Button,
+  Tooltip
+} from '@mui/material';
+import { 
+  PlayArrow, 
+  Pause,
+  TrendingUp,
+  TrendingDown,
+  Timeline
+} from '@mui/icons-material';
+import WorldMap from './WorldMap';
 import RegionalStats from './RegionalStats';
 import { generateGlobeData } from '../services/globeService';
-
-const getRiskColor = (risk) => {
-  return risk > 75 ? '#d73027' :
-         risk > 50 ? '#fc8d59' :
-         risk > 25 ? '#fee08b' :
-                    '#91cf60';
-};
 
 const YEAR_MIN = 2025;
 const YEAR_MAX = 2100;
@@ -36,52 +40,11 @@ const SCENARIOS = {
   }
 };
 
-const Map = ({ 
-  climateData = {},
-  selectedYear = 2025,
-  riskLevels = { drought: 0, flooding: 0, fires: 0, storms: 0 },
-  onYearChange
-}) => {
-  const [cities, setCities] = useState([
-    { name: 'Berlin', coords: [52.5200, 13.4050], population: 3.7 },
-    { name: 'Hamburg', coords: [53.5511, 9.9937], population: 1.8 },
-    { name: 'München', coords: [48.1351, 11.5820], population: 1.5 },
-    { name: 'Köln', coords: [50.9375, 6.9603], population: 1.1 },
-    { name: 'Frankfurt', coords: [50.1109, 8.6821], population: 0.75 },
-  ]);
-
-  // Simulierte Überflutungszonen (vereinfacht)
-  const floodZones = {
-    type: 'FeatureCollection',
-    features: [
-      {
-        type: 'Feature',
-        properties: { risk: 'high' },
-        geometry: {
-          type: 'Polygon',
-          coordinates: [[
-            [8.6821, 53.5511],
-            [9.9937, 53.5511],
-            [9.9937, 54.0000],
-            [8.6821, 54.0000],
-            [8.6821, 53.5511]
-          ]]
-        }
-      }
-    ]
-  };
-
-  const [viewMode, setViewMode] = useState('3D');
+const Map = ({ selectedYear = 2025, onYearChange }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentYear, setCurrentYear] = useState(selectedYear);
   const [scenario, setScenario] = useState('moderate');
   const [globeData, setGlobeData] = useState([]);
-  
-  const handleViewModeChange = (event, newMode) => {
-    if (newMode !== null) {
-      setViewMode(newMode);
-    }
-  };
 
   const updateGlobeData = useCallback((year, currentScenario) => {
     const data = generateGlobeData(currentScenario, year);
@@ -139,29 +102,6 @@ const Map = ({
 
   return (
     <Box sx={{ position: 'relative', width: '100%', height: '600px' }}>
-      {/* View Mode Toggle */}
-      <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 1000 }}>
-        <ToggleButtonGroup
-          value={viewMode}
-          exclusive
-          onChange={handleViewModeChange}
-          aria-label="view mode"
-          size="small"
-          sx={{ bgcolor: 'background.paper', boxShadow: 2 }}
-        >
-          <ToggleButton value="3D" aria-label="3D view">
-            <Tooltip title="3D Globe View">
-              <ThreeDRotation />
-            </Tooltip>
-          </ToggleButton>
-          <ToggleButton value="2D" aria-label="2D view">
-            <Tooltip title="2D Map View">
-              <MapIcon />
-            </Tooltip>
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Box>
-
       {/* Scenario Selector */}
       <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 1000 }}>
         <ButtonGroup 
@@ -193,7 +133,7 @@ const Map = ({
         </ButtonGroup>
       </Box>
 
-      {/* Globe/Map View */}
+      {/* Main Content */}
       <Box sx={{ 
         width: '100%', 
         height: '100%',
@@ -209,27 +149,14 @@ const Map = ({
           <RegionalStats data={globeData} year={currentYear} />
         </Box>
 
-        {/* Globe */}
+        {/* Map */}
         <Box sx={{ flexGrow: 1, height: '100%' }}>
-          {viewMode === '3D' ? (
-            <GlobeComponent
-              data={globeData}
-              year={currentYear}
-              width="100%"
-              height="600px"
-            />
-          ) : (
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              height: '100%',
-              bgcolor: 'background.paper',
-              borderRadius: 2
-            }}>
-              2D Map View (coming soon)
-            </Box>
-          )}
+          <WorldMap
+            data={globeData}
+            year={currentYear}
+            width="100%"
+            height="600px"
+          />
         </Box>
       </Box>
 
