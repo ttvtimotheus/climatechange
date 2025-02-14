@@ -7,7 +7,8 @@ import {
   Button,
   Tooltip,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Typography
 } from '@mui/material';
 import { 
   PlayArrow, 
@@ -110,49 +111,6 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Header mit Szenario-Auswahl */}
-      <Box sx={{ 
-        p: 2, 
-        borderBottom: 1, 
-        borderColor: 'divider',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2
-      }}>
-        {isMobile && (
-          <IconButton onClick={toggleStats} color="primary">
-            <MenuIcon />
-          </IconButton>
-        )}
-        <ButtonGroup 
-          variant="contained" 
-          size="small"
-          sx={{ 
-            bgcolor: 'background.paper', 
-            boxShadow: 2,
-            '& .MuiButton-root': {
-              textTransform: 'none'
-            }
-          }}
-        >
-          {Object.entries(SCENARIOS).map(([key, { label, icon, description }]) => (
-            <Button
-              key={key}
-              onClick={() => handleScenarioChange(key)}
-              variant={scenario === key ? 'contained' : 'outlined'}
-              startIcon={icon}
-              sx={{
-                bgcolor: scenario === key ? 'primary.main' : 'background.paper'
-              }}
-            >
-              <Tooltip title={description}>
-                <span>{label}</span>
-              </Tooltip>
-            </Button>
-          ))}
-        </ButtonGroup>
-      </Box>
-
       {/* Hauptbereich mit Karte und Statistiken */}
       <Box sx={{ 
         flex: 1,
@@ -188,45 +146,137 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
             data={globeData}
             year={currentYear}
           />
+
+          {/* Szenario-Auswahl über der Karte */}
+          <Box sx={{ 
+            position: 'absolute',
+            top: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            display: 'flex',
+            gap: 2,
+            alignItems: 'center'
+          }}>
+            {isMobile && (
+              <IconButton 
+                onClick={toggleStats} 
+                color="primary"
+                sx={{
+                  bgcolor: theme.palette.action.hover,
+                  '&:hover': {
+                    bgcolor: theme.palette.action.selected,
+                  }
+                }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+            <ButtonGroup 
+              variant="contained" 
+              size="small"
+              sx={{ 
+                bgcolor: theme.palette.action.hover,
+                backdropFilter: 'blur(8px)',
+                '& .MuiButton-root': {
+                  textTransform: 'none',
+                  px: 2,
+                  py: 1
+                }
+              }}
+            >
+              {Object.entries(SCENARIOS).map(([key, { label, icon, description }]) => (
+                <Button
+                  key={key}
+                  onClick={() => handleScenarioChange(key)}
+                  variant={scenario === key ? 'contained' : 'outlined'}
+                  startIcon={icon}
+                  sx={{
+                    bgcolor: scenario === key 
+                      ? theme.palette.primary.main
+                      : theme.palette.action.hover,
+                    '&:hover': {
+                      bgcolor: scenario === key 
+                        ? theme.palette.primary.main
+                        : theme.palette.action.selected,
+                    }
+                  }}
+                >
+                  <Tooltip title={description}>
+                    <span>{label}</span>
+                  </Tooltip>
+                </Button>
+              ))}
+            </ButtonGroup>
+          </Box>
         </Box>
       </Box>
 
       {/* Zeitleiste */}
       <Box sx={{
         p: 2,
+        bgcolor: theme.palette.action.hover,
+        backdropFilter: 'blur(8px)',
         borderTop: 1,
-        borderColor: 'divider',
-        bgcolor: 'background.paper',
+        borderColor: theme.palette.divider,
         display: 'flex',
         alignItems: 'center',
-        gap: 2
+        gap: 3,
+        position: 'relative',
+        zIndex: 1000
       }}>
         <IconButton 
           onClick={handlePlayPause} 
           color="primary"
           sx={{ 
-            bgcolor: 'action.hover',
+            bgcolor: theme.palette.action.hover,
             '&:hover': {
-              bgcolor: 'action.selected'
+              bgcolor: theme.palette.action.selected,
             }
           }}
         >
           {isPlaying ? <Pause /> : <PlayArrow />}
         </IconButton>
-        <Slider
-          value={currentYear}
-          min={YEAR_MIN}
-          max={YEAR_MAX}
-          onChange={handleSliderChange}
-          valueLabelDisplay="on"
-          valueLabelFormat={value => `${value}`}
-          sx={{ 
-            flex: 1,
-            '& .MuiSlider-valueLabel': {
-              bgcolor: 'primary.main'
-            }
-          }}
-        />
+
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            {YEAR_MIN}
+          </Typography>
+          
+          <Slider
+            value={currentYear}
+            min={YEAR_MIN}
+            max={YEAR_MAX}
+            onChange={handleSliderChange}
+            valueLabelDisplay="on"
+            valueLabelFormat={value => `${value}`}
+            sx={{ 
+              flex: 1,
+              '& .MuiSlider-valueLabel': {
+                bgcolor: theme.palette.primary.main
+              },
+              '& .MuiSlider-thumb': {
+                width: 16,
+                height: 16,
+                '&:hover, &.Mui-focusVisible': {
+                  boxShadow: `0 0 0 8px ${theme.palette.primary.main}`
+                }
+              },
+              '& .MuiSlider-track': {
+                height: 4,
+                bgcolor: theme.palette.primary.main
+              },
+              '& .MuiSlider-rail': {
+                height: 4,
+                bgcolor: theme.palette.primary.main
+              }
+            }}
+          />
+
+          <Typography variant="body2" color="text.secondary">
+            {YEAR_MAX}
+          </Typography>
+        </Box>
       </Box>
     </Box>
   );

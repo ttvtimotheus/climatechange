@@ -4,7 +4,6 @@ import { CssBaseline, Box, Tab, Tabs, Paper } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
 import { motion, AnimatePresence } from 'framer-motion';
 import theme from './theme';
-import Layout from './components/Layout';
 import Map from './components/Map';
 import ClimateControls from './components/ClimateControls';
 import DataVisualization from './components/DataVisualization';
@@ -106,6 +105,7 @@ function App() {
 
   return (
     <ThemeProvider theme={customTheme}>
+      <CssBaseline />
       <SnackbarProvider 
         maxSnack={3} 
         anchorOrigin={{
@@ -113,103 +113,100 @@ function App() {
           horizontal: 'right',
         }}
       >
-        <CssBaseline />
-        <Layout onToggleTheme={handleToggleTheme} isDarkMode={isDarkMode}>
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-            <Box sx={{ flex: { xs: '1', md: '2' } }}>
-              <Paper 
-                component={motion.div}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                elevation={2}
-                sx={{ overflow: 'hidden', height: '100%' }}
-              >
-                <Map
-                  climateData={climateData}
-                  selectedYear={selectedYear}
-                  riskLevels={riskLevels}
-                  onYearChange={handleYearChange}
-                />
-              </Paper>
-            </Box>
-            <Box sx={{ flex: '1' }}>
-              <Paper 
-                component={motion.div}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                elevation={2}
-                sx={{ p: 3 }}
-              >
-                <ClimateControls
-                  onScenarioChange={handleScenarioChange}
-                  onYearChange={handleYearChange}
-                  onEnergyMixChange={handleEnergyMixChange}
-                  riskLevels={riskLevels}
-                />
-              </Paper>
-            </Box>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+          <Box sx={{ flex: { xs: '1', md: '2' } }}>
+            <Paper 
+              component={motion.div}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              elevation={2}
+              sx={{ overflow: 'hidden', height: '100%' }}
+            >
+              <Map
+                climateData={climateData}
+                selectedYear={selectedYear}
+                riskLevels={riskLevels}
+                onYearChange={handleYearChange}
+              />
+            </Paper>
           </Box>
-          
-          <Paper 
-            elevation={2} 
-            sx={{ mt: 3, overflow: 'hidden' }}
-          >
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <Tabs 
-                value={activeTab} 
-                onChange={(e, newValue) => setActiveTab(newValue)}
-                variant="scrollable"
-                scrollButtons="auto"
-                sx={{
-                  px: 2,
-                  '& .MuiTab-root': {
-                    minHeight: 64,
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                  },
-                }}
-              >
-                <Tab label="Climate Data" />
-                <Tab label="Greenhouse Effect" />
-                <Tab label="Economic Impact" />
-                <Tab label="Energy Mix" />
-                <Tab label="Natural Disasters" />
-              </Tabs>
-            </Box>
+          <Box sx={{ flex: '1' }}>
+            <Paper 
+              component={motion.div}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              elevation={2}
+              sx={{ p: 3 }}
+            >
+              <ClimateControls
+                onScenarioChange={handleScenarioChange}
+                onYearChange={handleYearChange}
+                onEnergyMixChange={handleEnergyMixChange}
+                riskLevels={riskLevels}
+              />
+            </Paper>
+          </Box>
+        </Box>
+        
+        <Paper 
+          elevation={2} 
+          sx={{ mt: 3, overflow: 'hidden' }}
+        >
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs 
+              value={activeTab} 
+              onChange={(e, newValue) => setActiveTab(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                px: 2,
+                '& .MuiTab-root': {
+                  minHeight: 64,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                },
+              }}
+            >
+              <Tab label="Climate Data" />
+              <Tab label="Greenhouse Effect" />
+              <Tab label="Economic Impact" />
+              <Tab label="Energy Mix" />
+              <Tab label="Natural Disasters" />
+            </Tabs>
+          </Box>
 
-            <Box sx={{ p: 3 }}>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {activeTab === 0 && <DataVisualization data={climateData} />}
-                  {activeTab === 1 && (
-                    <GreenhouseEffect 
-                      climateData={climateData}
-                      onWindowSizeChange={setMovingAverageWindow}
-                    />
-                  )}
-                  {activeTab === 2 && <EconomicImpact data={economicData} />}
-                  {activeTab === 3 && (
-                    <EnergyMixSimulator onEnergyMixChange={handleDetailedEnergyMixChange} />
-                  )}
-                  {activeTab === 4 && (
-                    <DisasterSimulator 
-                      temperature={climateData?.temperature[climateData.years.indexOf(selectedYear)] || 0}
-                      year={selectedYear}
-                    />
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </Box>
-          </Paper>
-        </Layout>
+          <Box sx={{ p: 3 }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {activeTab === 0 && <DataVisualization data={climateData} />}
+                {activeTab === 1 && (
+                  <GreenhouseEffect 
+                    climateData={climateData}
+                    onWindowSizeChange={setMovingAverageWindow}
+                  />
+                )}
+                {activeTab === 2 && <EconomicImpact data={economicData} />}
+                {activeTab === 3 && (
+                  <EnergyMixSimulator onEnergyMixChange={handleDetailedEnergyMixChange} />
+                )}
+                {activeTab === 4 && (
+                  <DisasterSimulator 
+                    temperature={climateData?.temperature[climateData.years.indexOf(selectedYear)] || 0}
+                    year={selectedYear}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </Box>
+        </Paper>
       </SnackbarProvider>
     </ThemeProvider>
   );
