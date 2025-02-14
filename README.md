@@ -9,7 +9,7 @@
 
 Eine moderne Webanwendung zur interaktiven Visualisierung von Klimawandelszenarien und deren globalen Auswirkungen. Erkunde verschiedene Zukunftsszenarien und verstehe die regionalen Unterschiede der Klimaerwärmung.
 
-[Demo ansehen](https://climatechange-demo.vercel.app) • [Dokumentation](#dokumentation) • [Installation](#installation) • [Mitwirken](#mitwirken)
+[Live Demo](https://climatechange-delta.vercel.app/) • [Dokumentation](#dokumentation) • [Installation](#installation) • [Mitwirken](#mitwirken)
 
 ![Klimawandel-Visualisierung Screenshot](./public/preview.png)
 
