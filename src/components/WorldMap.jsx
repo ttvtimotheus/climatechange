@@ -6,16 +6,16 @@ import {
   Marker,
   ZoomableGroup
 } from 'react-simple-maps';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, alpha } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
 // Farbskala für Temperaturänderungen
-const getTemperatureColor = (value) => {
-  if (value >= 4) return '#d73027'; // Rot - Sehr hoch
-  if (value >= 3) return '#fc8d59'; // Orange - Hoch
-  if (value >= 2) return '#fee08b'; // Gelb - Mittel
-  if (value >= 1) return '#d9ef8b'; // Hellgrün - Niedrig
-  return '#91cf60'; // Grün - Sehr niedrig
+const getTemperatureColor = (value, theme) => {
+  if (value >= 4) return theme.palette.error.main;
+  if (value >= 3) return theme.palette.warning.main;
+  if (value >= 2) return theme.palette.warning.light;
+  if (value >= 1) return theme.palette.success.light;
+  return theme.palette.success.main;
 };
 
 const WorldMap = ({ 
@@ -43,10 +43,14 @@ const WorldMap = ({
       sx={{ 
         width,
         height,
-        bgcolor: theme.palette.background.paper,
-        borderRadius: 2,
+        bgcolor: theme.palette.background.default,
+        borderRadius: 4,
         overflow: 'hidden',
-        position: 'relative'
+        position: 'relative',
+        '& path': {
+          transition: 'all 0.3s ease',
+          outline: 'none',
+        }
       }}
     >
       <ComposableMap
@@ -56,7 +60,8 @@ const WorldMap = ({
         }}
         style={{
           width: '100%',
-          height: '100%'
+          height: '100%',
+          background: 'transparent'
         }}
       >
         <ZoomableGroup center={[0, 0]} zoom={1}>
@@ -66,18 +71,20 @@ const WorldMap = ({
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}
-                  fill={theme.palette.background.default}
-                  stroke={theme.palette.divider}
+                  fill={alpha(theme.palette.primary.main, 0.1)}
+                  stroke={alpha(theme.palette.primary.main, 0.3)}
                   strokeWidth={0.5}
                   style={{
                     default: {
-                      outline: 'none'
+                      outline: 'none',
                     },
                     hover: {
-                      fill: theme.palette.action.hover,
-                      outline: 'none'
+                      fill: alpha(theme.palette.primary.main, 0.2),
+                      outline: 'none',
+                      cursor: 'pointer'
                     },
                     pressed: {
+                      fill: alpha(theme.palette.primary.main, 0.3),
                       outline: 'none'
                     }
                   }}
@@ -91,21 +98,24 @@ const WorldMap = ({
               <g transform="translate(-6, -6)">
                 <circle
                   r={Math.max(4, Math.min(value * 2, 10))}
-                  fill={getTemperatureColor(value)}
+                  fill={getTemperatureColor(value, theme)}
                   stroke={theme.palette.background.paper}
                   strokeWidth={2}
                   style={{
                     cursor: 'pointer',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
+                    filter: `drop-shadow(0 0 4px ${alpha(getTemperatureColor(value, theme), 0.5)})`
                   }}
                 />
                 <text
                   textAnchor="middle"
                   y={-10}
                   style={{
-                    fontFamily: 'system-ui',
+                    fontFamily: theme.typography.fontFamily,
                     fill: theme.palette.text.primary,
-                    fontSize: '8px'
+                    fontSize: '8px',
+                    fontWeight: 500,
+                    filter: `drop-shadow(0 1px 2px ${alpha(theme.palette.common.black, 0.5)})`
                   }}
                 >
                   {label}
