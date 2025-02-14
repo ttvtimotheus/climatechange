@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useRef, useEffect } from 'react';
 import {
   ComposableMap,
   Geographies,
@@ -22,27 +22,44 @@ const WorldMap = ({
   data = [], 
   year,
   width = '100%',
-  height = '600px'
+  height = '100%'
 }) => {
   const theme = useTheme();
+  const mapRef = useRef();
+
+  // Berechne optimale Kartengröße basierend auf Container
+  useEffect(() => {
+    if (mapRef.current) {
+      const container = mapRef.current;
+      const containerWidth = container.offsetWidth;
+      const containerHeight = container.offsetHeight;
+      // Hier könnten weitere Anpassungen erfolgen
+    }
+  }, []);
 
   return (
-    <Box sx={{ 
-      width, 
-      height,
-      bgcolor: theme.palette.background.paper,
-      borderRadius: 2,
-      overflow: 'hidden'
-    }}>
+    <Box 
+      ref={mapRef}
+      sx={{ 
+        width,
+        height,
+        bgcolor: theme.palette.background.paper,
+        borderRadius: 2,
+        overflow: 'hidden',
+        position: 'relative'
+      }}
+    >
       <ComposableMap
-        width={800}
-        height={400}
         projectionConfig={{
           rotate: [-10, 0, 0],
           scale: 147
         }}
+        style={{
+          width: '100%',
+          height: '100%'
+        }}
       >
-        <ZoomableGroup>
+        <ZoomableGroup center={[0, 0]} zoom={1}>
           <Geographies geography="/world-110m.json">
             {({ geographies }) =>
               geographies.map((geo) => (
@@ -71,15 +88,29 @@ const WorldMap = ({
 
           {data.map(({ lat, lng, value, label }) => (
             <Marker key={label} coordinates={[lng, lat]}>
-              <circle
-                r={Math.max(4, Math.min(value * 2, 10))}
-                fill={getTemperatureColor(value)}
-                stroke={theme.palette.background.paper}
-                strokeWidth={2}
-                style={{
-                  cursor: 'pointer'
-                }}
-              />
+              <g transform="translate(-6, -6)">
+                <circle
+                  r={Math.max(4, Math.min(value * 2, 10))}
+                  fill={getTemperatureColor(value)}
+                  stroke={theme.palette.background.paper}
+                  strokeWidth={2}
+                  style={{
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                />
+                <text
+                  textAnchor="middle"
+                  y={-10}
+                  style={{
+                    fontFamily: 'system-ui',
+                    fill: theme.palette.text.primary,
+                    fontSize: '8px'
+                  }}
+                >
+                  {label}
+                </text>
+              </g>
               <title>{`${label}: ${value.toFixed(1)}°C`}</title>
             </Marker>
           ))}

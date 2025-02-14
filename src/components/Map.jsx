@@ -5,14 +5,17 @@ import {
   Slider,
   ButtonGroup,
   Button,
-  Tooltip
+  Tooltip,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { 
   PlayArrow, 
   Pause,
   TrendingUp,
   TrendingDown,
-  Timeline
+  Timeline,
+  Menu as MenuIcon
 } from '@mui/icons-material';
 import WorldMap from './WorldMap';
 import RegionalStats from './RegionalStats';
@@ -41,6 +44,9 @@ const SCENARIOS = {
 };
 
 const Map = ({ selectedYear = 2025, onYearChange }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [isStatsOpen, setIsStatsOpen] = useState(!isMobile);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentYear, setCurrentYear] = useState(selectedYear);
   const [scenario, setScenario] = useState('moderate');
@@ -51,18 +57,14 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
     setGlobeData(data);
   }, []);
 
-  // Handle year changes
   useEffect(() => {
     setCurrentYear(selectedYear);
     updateGlobeData(selectedYear, scenario);
   }, [selectedYear, updateGlobeData, scenario]);
 
-  // Animation effect
   useEffect(() => {
-    let animationFrame;
-    
-    const animate = () => {
-      if (isPlaying) {
+    if (isPlaying) {
+      const interval = setInterval(() => {
         setCurrentYear(prev => {
           const next = prev + 1;
           if (next > YEAR_MAX) {
@@ -71,16 +73,11 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
           }
           return next;
         });
-      }
-    };
-
-    if (isPlaying) {
-      const interval = setInterval(animate, ANIMATION_INTERVAL);
+      }, ANIMATION_INTERVAL);
       return () => clearInterval(interval);
     }
   }, [isPlaying]);
 
-  // Update data when year changes during animation
   useEffect(() => {
     updateGlobeData(currentYear, scenario);
     if (onYearChange) {
@@ -100,10 +97,33 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
     setScenario(newScenario);
   };
 
+  const toggleStats = () => {
+    setIsStatsOpen(prev => !prev);
+  };
+
   return (
-    <Box sx={{ position: 'relative', width: '100%', height: '600px' }}>
-      {/* Scenario Selector */}
-      <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 1000 }}>
+    <Box sx={{ 
+      position: 'relative', 
+      width: '100%', 
+      height: '100vh',
+      bgcolor: theme.palette.background.default,
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      {/* Header mit Szenario-Auswahl */}
+      <Box sx={{ 
+        p: 2, 
+        borderBottom: 1, 
+        borderColor: 'divider',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2
+      }}>
+        {isMobile && (
+          <IconButton onClick={toggleStats} color="primary">
+            <MenuIcon />
+          </IconButton>
+        )}
         <ButtonGroup 
           variant="contained" 
           size="small"
@@ -133,52 +153,64 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
         </ButtonGroup>
       </Box>
 
-      {/* Main Content */}
+      {/* Hauptbereich mit Karte und Statistiken */}
       <Box sx={{ 
-        width: '100%', 
-        height: '100%',
+        flex: 1,
         display: 'flex',
-        gap: 2
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        {/* Regional Stats */}
+        {/* RegionalStats Sidebar */}
         <Box sx={{ 
-          display: { xs: 'none', md: 'block' },
+          width: 300,
           height: '100%',
+          position: isMobile ? 'absolute' : 'relative',
+          left: 0,
+          top: 0,
+          transform: isStatsOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.3s ease',
+          zIndex: 1000,
+          bgcolor: 'background.paper',
+          borderRight: 1,
+          borderColor: 'divider',
           overflowY: 'auto'
         }}>
           <RegionalStats data={globeData} year={currentYear} />
         </Box>
 
-        {/* Map */}
-        <Box sx={{ flexGrow: 1, height: '100%' }}>
+        {/* Karte */}
+        <Box sx={{ 
+          flex: 1,
+          height: '100%',
+          position: 'relative'
+        }}>
           <WorldMap
             data={globeData}
             year={currentYear}
-            width="100%"
-            height="600px"
           />
         </Box>
       </Box>
 
-      {/* Time Controls */}
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 16,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '80%',
-          maxWidth: 600,
-          bgcolor: 'background.paper',
-          borderRadius: 2,
-          p: 2,
-          boxShadow: 2,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2
-        }}
-      >
-        <IconButton onClick={handlePlayPause} color="primary">
+      {/* Zeitleiste */}
+      <Box sx={{
+        p: 2,
+        borderTop: 1,
+        borderColor: 'divider',
+        bgcolor: 'background.paper',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2
+      }}>
+        <IconButton 
+          onClick={handlePlayPause} 
+          color="primary"
+          sx={{ 
+            bgcolor: 'action.hover',
+            '&:hover': {
+              bgcolor: 'action.selected'
+            }
+          }}
+        >
           {isPlaying ? <Pause /> : <PlayArrow />}
         </IconButton>
         <Slider
@@ -188,7 +220,12 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
           onChange={handleSliderChange}
           valueLabelDisplay="on"
           valueLabelFormat={value => `${value}`}
-          sx={{ flexGrow: 1 }}
+          sx={{ 
+            flex: 1,
+            '& .MuiSlider-valueLabel': {
+              bgcolor: 'primary.main'
+            }
+          }}
         />
       </Box>
     </Box>
