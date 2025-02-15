@@ -24,48 +24,95 @@ const energyMixFactors = {
   fossil: 1.3, // Verstärkt die Auswirkungen
 };
 
-export const calculateClimateData = (scenario, energyMix, startYear, endYear) => {
-  const scenarioData = scenarios[scenario];
-  const mixFactor = energyMixFactors[energyMix];
+export const calculateClimateData = (scenario, energyMix) => {
   const years = [];
   const temperature = [];
   const co2 = [];
-  const seaLevel = [];
-
-  const baseTemp = 1.1; // Temperaturanstieg seit vorindustrieller Zeit
-  const baseCO2 = 420; // ppm in 2025
   
-  for (let year = startYear; year <= endYear; year += 5) {
-    const yearsSince2025 = year - 2025;
+  // Generate years from 2025 to 2100 in 5-year steps
+  for (let year = 2025; year <= 2100; year += 5) {
     years.push(year);
     
-    // Berechne Temperaturanstieg
-    const tempIncrease = (baseTemp + (scenarioData.temperatureIncrease * yearsSince2025 / 10) * mixFactor);
-    temperature.push(Number(tempIncrease.toFixed(1)));
+    // Calculate progress (0 to 1)
+    const progress = (year - 2025) / (2100 - 2025);
     
-    // Berechne CO2-Konzentration
-    const co2Increase = baseCO2 + (scenarioData.co2Increase * yearsSince2025 / 10) * mixFactor;
-    co2.push(Math.round(co2Increase));
+    // Base CO2 values
+    let baseCo2 = 420; // Starting point in 2025
     
-    // Berechne Meeresspiegelanstieg
-    const seaLevelIncrease = (scenarioData.seaLevelRise * yearsSince2025 / 75) * mixFactor;
-    seaLevel.push(Number(seaLevelIncrease.toFixed(2)));
+    // Calculate CO2 based on scenario and energy mix
+    switch (scenario) {
+      case 'optimistic':
+        baseCo2 += progress * 30;
+        break;
+      case 'moderate':
+        baseCo2 += progress * 80;
+        break;
+      case 'pessimistic':
+        baseCo2 += progress * 150;
+        break;
+      default:
+        baseCo2 += progress * 80;
+    }
+    
+    // Adjust CO2 based on energy mix
+    const renewableImpact = (energyMix.renewable / 100) * -50;
+    const fossilImpact = (energyMix.fossil / 100) * 50;
+    const finalCo2 = baseCo2 + renewableImpact + fossilImpact;
+    
+    co2.push(Math.round(finalCo2));
+    
+    // Calculate temperature change based on CO2
+    const baseTemp = (finalCo2 - 420) / 100;
+    let tempIncrease;
+    
+    switch (scenario) {
+      case 'optimistic':
+        tempIncrease = baseTemp * 0.8;
+        break;
+      case 'moderate':
+        tempIncrease = baseTemp * 1.2;
+        break;
+      case 'pessimistic':
+        tempIncrease = baseTemp * 1.5;
+        break;
+      default:
+        tempIncrease = baseTemp * 1.2;
+    }
+    
+    temperature.push(Number(tempIncrease.toFixed(2)));
   }
-
+  
   return {
     years,
     temperature,
-    co2,
-    seaLevel,
+    co2
   };
 };
 
-// Berechnet Risiko-Level für verschiedene Klimaereignisse
-export const calculateRiskLevels = (temperature) => {
+export const calculateRiskLevels = (data, selectedYear) => {
+  if (!data || !data.temperature || !data.years) {
+    return {
+      drought: 0,
+      flooding: 0,
+      fires: 0,
+      storms: 0
+    };
+  }
+
+  const yearIndex = data.years.indexOf(selectedYear);
+  if (yearIndex === -1) return { drought: 0, flooding: 0, fires: 0, storms: 0 };
+
+  const temp = data.temperature[yearIndex];
+  const co2 = data.co2[yearIndex];
+
+  // Calculate risk levels based on temperature and CO2
+  const baseRisk = (temp / 5) * 100; // 5°C = 100% risk
+  const co2Factor = (co2 - 420) / 200; // Additional risk based on CO2 increase
+
   return {
-    drought: Math.min(100, Math.round(temperature * 25)),
-    flooding: Math.min(100, Math.round(temperature * 20)),
-    storms: Math.min(100, Math.round(temperature * 15)),
-    fires: Math.min(100, Math.round(temperature * 30)),
+    drought: Math.min(100, Math.round(baseRisk * 1.2 + co2Factor * 20)),
+    flooding: Math.min(100, Math.round(baseRisk * 1.1 + co2Factor * 15)),
+    fires: Math.min(100, Math.round(baseRisk * 1.3 + co2Factor * 25)),
+    storms: Math.min(100, Math.round(baseRisk * 1.15 + co2Factor * 18))
   };
 };

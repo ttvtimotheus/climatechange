@@ -1,6 +1,7 @@
 import React from 'react';
+import { Box, Typography } from '@mui/material';
 import { Line } from 'react-chartjs-2';
-import { Paper, Typography, Box } from '@mui/material';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,8 +10,7 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend,
-  Filler
+  Legend
 } from 'chart.js';
 
 ChartJS.register(
@@ -20,108 +20,75 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend,
-  Filler
+  Legend
 );
 
 const DataVisualization = ({ data }) => {
-  const chartData = {
-    labels: data?.years || [],
+  const { t } = useLanguage();
+
+  if (!data || !data.years || !data.temperature || !data.co2) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography>{t('errors.noData')}</Typography>
+      </Box>
+    );
+  }
+
+  const temperatureData = {
+    labels: data.years,
     datasets: [
       {
-        label: 'Temperaturanstieg (°C)',
-        data: data?.temperature || [],
+        label: t('charts.temperature'),
+        data: data.temperature,
         borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointHoverRadius: 6
-      },
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        tension: 0.4
+      }
+    ]
+  };
+
+  const co2Data = {
+    labels: data.years,
+    datasets: [
       {
-        label: 'CO₂-Konzentration (ppm)',
-        data: data?.co2 || [],
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointHoverRadius: 6
+        label: t('charts.co2'),
+        data: data.co2,
+        borderColor: 'rgb(53, 162, 235)',
+        backgroundColor: 'rgba(53, 162, 235, 0.5)',
+        tension: 0.4
       }
     ]
   };
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top',
-        labels: {
-          padding: 20,
-          font: {
-            size: 14
-          }
-        }
       },
-      title: {
-        display: false
-      },
-      tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        titleColor: '#000',
-        bodyColor: '#000',
-        borderColor: 'rgba(0, 0, 0, 0.1)',
-        borderWidth: 1,
-        padding: 12,
-        cornerRadius: 8,
-        bodyFont: {
-          size: 14
-        },
-        titleFont: {
-          size: 16,
-          weight: 'bold'
-        }
-      }
     },
     scales: {
       y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
-        }
-      },
-      x: {
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
-        }
+        beginAtZero: false,
       }
     }
   };
 
   return (
-    <Paper 
-      elevation={0} 
-      sx={{ 
-        p: 3, 
-        borderRadius: 3,
-        backgroundColor: 'background.paper'
-      }}
-    >
-      <Typography 
-        variant="h6" 
-        gutterBottom 
-        sx={{ 
-          fontWeight: 600, 
-          color: 'primary.main',
-          mb: 3
-        }}
-      >
-        Klimaentwicklung über Zeit
-      </Typography>
-      <Box sx={{ height: '400px' }}>
-        <Line data={chartData} options={options} />
+    <Box sx={{ 
+      height: '100%',
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 3
+    }}>
+      <Box sx={{ height: '100%', minHeight: 300 }}>
+        <Line options={options} data={temperatureData} />
       </Box>
-    </Paper>
+      <Box sx={{ height: '100%', minHeight: 300 }}>
+        <Line options={options} data={co2Data} />
+      </Box>
+    </Box>
   );
 };
 

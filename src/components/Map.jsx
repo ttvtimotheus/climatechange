@@ -21,6 +21,7 @@ import {
 import WorldMap from './WorldMap';
 import RegionalStats from './RegionalStats';
 import { generateGlobeData } from '../services/globeService';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const YEAR_MIN = 2025;
 const YEAR_MAX = 2100;
@@ -28,19 +29,13 @@ const ANIMATION_INTERVAL = 500; // milliseconds
 
 const SCENARIOS = {
   optimistic: {
-    label: 'Optimistisch',
-    icon: <TrendingDown />,
-    description: 'Paris-Ziele werden erreicht'
+    icon: <TrendingDown />
   },
   moderate: {
-    label: 'Moderat',
-    icon: <Timeline />,
-    description: 'Teilweise Emissionsreduktion'
+    icon: <Timeline />
   },
   pessimistic: {
-    label: 'Pessimistisch',
-    icon: <TrendingUp />,
-    description: 'Weiter wie bisher'
+    icon: <TrendingUp />
   }
 };
 
@@ -52,6 +47,7 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
   const [currentYear, setCurrentYear] = useState(selectedYear);
   const [scenario, setScenario] = useState('moderate');
   const [globeData, setGlobeData] = useState([]);
+  const { t } = useLanguage();
 
   const updateGlobeData = useCallback((year, currentScenario) => {
     const data = generateGlobeData(currentScenario, year);
@@ -185,7 +181,7 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
                 }
               }}
             >
-              {Object.entries(SCENARIOS).map(([key, { label, icon, description }]) => (
+              {Object.entries(SCENARIOS).map(([key, { icon }]) => (
                 <Button
                   key={key}
                   onClick={() => handleScenarioChange(key)}
@@ -202,8 +198,8 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
                     }
                   }}
                 >
-                  <Tooltip title={description}>
-                    <span>{label}</span>
+                  <Tooltip title={t(`scenarios.${key}.description`)}>
+                    <span>{t(`scenarios.${key}.label`)}</span>
                   </Tooltip>
                 </Button>
               ))}

@@ -14,14 +14,15 @@ import {
   Stack
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Regionen-Gruppierung
 const REGIONS = {
-  'Nordeuropa': ['Berlin', 'London', 'Moscow'],
-  'Südeuropa': ['Paris', 'Madrid', 'Rom'],
-  'Nordamerika': ['New York', 'Los Angeles', 'Toronto'],
-  'Asien': ['Tokyo', 'Beijing', 'Seoul'],
-  'Südliche Hemisphäre': ['Sydney', 'Rio', 'Cape Town']
+  northEurope: ['Berlin', 'London', 'Moscow'],
+  southEurope: ['Paris', 'Madrid', 'Rom'],
+  northAmerica: ['New York', 'Los Angeles', 'Toronto'],
+  asia: ['Tokyo', 'Beijing', 'Seoul'],
+  southernHemisphere: ['Sydney', 'Rio', 'Cape Town']
 };
 
 const getTemperatureColor = (value, theme) => {
@@ -33,15 +34,16 @@ const getTemperatureColor = (value, theme) => {
 };
 
 const getRiskLevel = (value) => {
-  if (value >= 4) return 'Extrem hoch';
-  if (value >= 3) return 'Sehr hoch';
-  if (value >= 2) return 'Hoch';
-  if (value >= 1) return 'Moderat';
-  return 'Niedrig';
+  if (value >= 4) return 'riskLevels.extreme';
+  if (value >= 3) return 'riskLevels.veryHigh';
+  if (value >= 2) return 'riskLevels.high';
+  if (value >= 1) return 'riskLevels.moderate';
+  return 'riskLevels.low';
 };
 
 const RegionalStats = ({ data = [], year }) => {
   const theme = useTheme();
+  const { t } = useLanguage();
 
   // Gruppiere Daten nach Regionen
   const regionalData = Object.entries(REGIONS).map(([region, cities]) => {
@@ -69,10 +71,10 @@ const RegionalStats = ({ data = [], year }) => {
     >
       <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
         <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
-          Regionale Auswirkungen
+          {t('regions.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Temperaturänderung seit 2025
+          {t('regions.subtitle')}
         </Typography>
       </Box>
 
@@ -93,7 +95,7 @@ const RegionalStats = ({ data = [], year }) => {
             <Box sx={{ p: 2 }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
                 <Typography variant="subtitle1" fontWeight={600}>
-                  {region}
+                  {t(`regions.${region}`)}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -106,14 +108,14 @@ const RegionalStats = ({ data = [], year }) => {
                     fontWeight: 500
                   }}
                 >
-                  {riskLevel}
+                  {t(riskLevel)}
                 </Typography>
               </Stack>
 
               <Box sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                   <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-                    Durchschnitt:
+                    {t('regions.average')}:
                   </Typography>
                   <Typography
                     variant="body2"
