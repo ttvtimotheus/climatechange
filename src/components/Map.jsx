@@ -1,48 +1,19 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  Box, 
-  IconButton, 
-  Slider,
-  ButtonGroup,
-  Button,
-  Tooltip,
-  useTheme,
-  useMediaQuery,
-  Typography,
-  Chip,
-  alpha
-} from '@mui/material';
-import { 
-  PlayArrow, 
-  Pause,
-  TrendingUp,
-  TrendingDown,
-  Timeline,
-  ChevronLeft,
-  ChevronRight
-} from '@mui/icons-material';
+import { useState, useEffect, useMemo } from 'react';
+import { Play, Pause, TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import WorldMap from './WorldMap';
 import RegionalStats from './RegionalStats';
 import { generateGlobeData } from '../services/globeService';
 import { useLanguage } from '../contexts/LanguageContext';
+import { cn } from '../lib/utils';
 
 const YEAR_MIN = 2025;
 const YEAR_MAX = 2100;
 const ANIMATION_INTERVAL = 300;
 
 const SCENARIOS = {
-  optimistic: {
-    icon: <TrendingDown fontSize="small" />,
-    color: '#10B981'
-  },
-  moderate: {
-    icon: <Timeline fontSize="small" />,
-    color: '#F59E0B'
-  },
-  pessimistic: {
-    icon: <TrendingUp fontSize="small" />,
-    color: '#EF4444'
-  }
+  optimistic: { icon: TrendingDown, color: 'text-emerald-400', bg: 'bg-emerald-500/20', border: 'border-emerald-500/50' },
+  moderate: { icon: Minus, color: 'text-amber-400', bg: 'bg-amber-500/20', border: 'border-amber-500/50' },
+  pessimistic: { icon: TrendingUp, color: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/50' }
 };
 
 const Map = ({ 
@@ -51,14 +22,11 @@ const Map = ({
   onYearChange,
   onScenarioChange 
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentYear, setCurrentYear] = useState(selectedYear);
   const { t } = useLanguage();
 
-  // Generate globe data based on scenario and year
   const globeData = useMemo(() => {
     return generateGlobeData(selectedScenario, currentYear);
   }, [selectedScenario, currentYear]);
@@ -89,198 +57,98 @@ const Map = ({
     }
   }, [currentYear, onYearChange, selectedYear]);
 
-  const handleSliderChange = (event, newValue) => {
-    setCurrentYear(newValue);
-  };
-
-  const handlePlayPause = () => {
-    setIsPlaying(prev => !prev);
-  };
-
-  const handleScenarioChange = (newScenario) => {
-    if (onScenarioChange) {
-      onScenarioChange(newScenario);
-    }
-  };
-
-  const toggleStats = () => {
-    setIsStatsOpen(prev => !prev);
-  };
+  const percentage = ((currentYear - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * 100;
 
   return (
-    <Box sx={{ 
-      position: 'relative', 
-      width: '100%', 
-      height: '100%',
-      bgcolor: theme.palette.background.default,
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      {/* Main area with map */}
-      <Box sx={{ 
-        flex: 1,
-        display: 'flex',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        {/* Regional Stats Sidebar */}
-        <Box sx={{ 
-          width: 280,
-          height: '100%',
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          transform: isStatsOpen ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 0.3s ease',
-          zIndex: 1000,
-          bgcolor: 'background.paper',
-          borderRight: 1,
-          borderColor: 'divider',
-          overflowY: 'auto',
-          boxShadow: isStatsOpen ? 4 : 0
-        }}>
+    <div className="relative w-full h-full flex flex-col bg-background">
+      {/* Main area */}
+      <div className="flex-1 relative overflow-hidden">
+        {/* Stats Sidebar */}
+        <div className={cn(
+          'absolute left-0 top-0 h-full w-72 bg-surface border-r border-border z-50',
+          'transition-transform duration-300 overflow-auto',
+          isStatsOpen ? 'translate-x-0 shadow-xl' : '-translate-x-full'
+        )}>
           <RegionalStats data={globeData} year={currentYear} />
-        </Box>
+        </div>
 
-        {/* Toggle Stats Button */}
-        <IconButton 
-          onClick={toggleStats}
-          size="small"
-          sx={{
-            position: 'absolute',
-            left: isStatsOpen ? 280 : 0,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 1001,
-            bgcolor: 'background.paper',
-            borderRadius: '0 8px 8px 0',
-            boxShadow: 2,
-            transition: 'left 0.3s ease',
-            '&:hover': {
-              bgcolor: 'action.hover',
-            }
-          }}
+        {/* Toggle Button */}
+        <button
+          onClick={() => setIsStatsOpen(!isStatsOpen)}
+          className={cn(
+            'absolute top-1/2 -translate-y-1/2 z-50 p-1.5',
+            'bg-surface border border-border rounded-r-lg shadow-lg',
+            'hover:bg-surface-hover transition-all duration-300',
+            isStatsOpen ? 'left-72' : 'left-0'
+          )}
         >
-          {isStatsOpen ? <ChevronLeft /> : <ChevronRight />}
-        </IconButton>
+          {isStatsOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        </button>
 
         {/* Map */}
-        <Box sx={{ 
-          flex: 1,
-          height: '100%',
-          position: 'relative'
-        }}>
-          <WorldMap
-            data={globeData}
-            year={currentYear}
-          />
+        <div className="w-full h-full">
+          <WorldMap data={globeData} year={currentYear} />
 
-          {/* Scenario Selection */}
-          <Box sx={{ 
-            position: 'absolute',
-            top: 12,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 100,
-            display: 'flex',
-            gap: 1
-          }}>
-            {Object.entries(SCENARIOS).map(([key, { icon, color }]) => (
-              <Tooltip key={key} title={t(`scenarios.${key}.description`)}>
-                <Chip
-                  icon={icon}
-                  label={t(`scenarios.${key}.label`)}
-                  onClick={() => handleScenarioChange(key)}
-                  size="small"
-                  sx={{
-                    bgcolor: selectedScenario === key 
-                      ? alpha(color, 0.2)
-                      : alpha(theme.palette.background.paper, 0.9),
-                    color: selectedScenario === key ? color : 'text.primary',
-                    border: 1,
-                    borderColor: selectedScenario === key ? color : 'divider',
-                    fontWeight: selectedScenario === key ? 600 : 400,
-                    backdropFilter: 'blur(8px)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      bgcolor: alpha(color, 0.15),
-                    },
-                    '& .MuiChip-icon': {
-                      color: selectedScenario === key ? color : 'text.secondary'
-                    }
-                  }}
-                />
-              </Tooltip>
+          {/* Scenario Pills */}
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {Object.entries(SCENARIOS).map(([key, { icon: Icon, color, bg, border }]) => (
+              <button
+                key={key}
+                onClick={() => onScenarioChange?.(key)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium',
+                  'border backdrop-blur-md transition-all',
+                  selectedScenario === key
+                    ? cn(bg, border, color)
+                    : 'bg-surface/80 border-border text-text-secondary hover:text-text-primary'
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {t(`scenarios.${key}.label`)}
+              </button>
             ))}
-          </Box>
-        </Box>
-      </Box>
+          </div>
+        </div>
+      </div>
 
       {/* Timeline */}
-      <Box sx={{
-        p: 1.5,
-        px: 2,
-        bgcolor: alpha(theme.palette.background.paper, 0.95),
-        backdropFilter: 'blur(8px)',
-        borderTop: 1,
-        borderColor: 'divider',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2
-      }}>
-        <IconButton 
-          onClick={handlePlayPause} 
-          size="small"
-          sx={{ 
-            bgcolor: 'primary.main',
-            color: 'white',
-            '&:hover': {
-              bgcolor: 'primary.dark',
-            }
-          }}
+      <div className="flex items-center gap-3 p-3 border-t border-border bg-surface/80 backdrop-blur-sm">
+        <button
+          onClick={() => setIsPlaying(!isPlaying)}
+          className="p-2 rounded-lg bg-accent text-background hover:bg-accent-hover transition-colors"
         >
-          {isPlaying ? <Pause fontSize="small" /> : <PlayArrow fontSize="small" />}
-        </IconButton>
+          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+        </button>
 
-        <Typography variant="caption" color="text.secondary" sx={{ minWidth: 35 }}>
-          {YEAR_MIN}
-        </Typography>
-        
-        <Slider
-          value={currentYear}
-          min={YEAR_MIN}
-          max={YEAR_MAX}
-          onChange={handleSliderChange}
-          valueLabelDisplay="auto"
-          sx={{ 
-            flex: 1,
-            '& .MuiSlider-thumb': {
-              width: 14,
-              height: 14,
-            },
-            '& .MuiSlider-track': {
-              height: 4,
-            },
-            '& .MuiSlider-rail': {
-              height: 4,
-              opacity: 0.3
-            }
-          }}
-        />
+        <span className="text-xs text-text-muted w-10">{YEAR_MIN}</span>
 
-        <Typography variant="caption" color="text.secondary" sx={{ minWidth: 35 }}>
-          {YEAR_MAX}
-        </Typography>
-        
-        <Chip 
-          label={currentYear} 
-          size="small" 
-          color="primary"
-          sx={{ fontWeight: 600, minWidth: 60 }}
-        />
-      </Box>
-    </Box>
+        <div className="flex-1 relative">
+          <input
+            type="range"
+            min={YEAR_MIN}
+            max={YEAR_MAX}
+            value={currentYear}
+            onChange={(e) => setCurrentYear(Number(e.target.value))}
+            className={cn(
+              'w-full h-1.5 appearance-none bg-border rounded-full cursor-pointer',
+              '[&::-webkit-slider-thumb]:appearance-none',
+              '[&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4',
+              '[&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:rounded-full',
+              '[&::-webkit-slider-thumb]:cursor-pointer'
+            )}
+            style={{
+              background: `linear-gradient(to right, var(--color-accent) 0%, var(--color-accent) ${percentage}%, var(--color-border) ${percentage}%, var(--color-border) 100%)`
+            }}
+          />
+        </div>
+
+        <span className="text-xs text-text-muted w-10">{YEAR_MAX}</span>
+
+        <div className="px-3 py-1 rounded-lg bg-accent text-background text-sm font-semibold">
+          {currentYear}
+        </div>
+      </div>
+    </div>
   );
 };
 

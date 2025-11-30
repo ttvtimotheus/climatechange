@@ -1,5 +1,3 @@
-import React from 'react';
-import { Box, Typography } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import { useLanguage } from '../contexts/LanguageContext';
 import {
@@ -10,114 +8,81 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 } from 'chart.js';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 const DataVisualization = ({ data }) => {
   const { t } = useLanguage();
 
-  if (!data || !data.years || !data.temperature || !data.co2) {
+  if (!data?.years?.length) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography color="text.secondary">{t('errors.noData')}</Typography>
-      </Box>
+      <div className="flex items-center justify-center h-full text-text-muted">
+        {t('errors.noData')}
+      </div>
     );
   }
-
-  const temperatureData = {
-    labels: data.years,
-    datasets: [
-      {
-        label: t('charts.temperature'),
-        data: data.temperature,
-        borderColor: '#EF4444',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 3,
-        pointHoverRadius: 5
-      }
-    ]
-  };
-
-  const co2Data = {
-    labels: data.years,
-    datasets: [
-      {
-        label: t('charts.co2'),
-        data: data.co2,
-        borderColor: '#3B82F6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 3,
-        pointHoverRadius: 5
-      }
-    ]
-  };
 
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    interaction: {
-      mode: 'index',
-      intersect: false,
-    },
+    interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: {
         position: 'top',
-        labels: {
-          color: '#94A3B8',
-          font: { size: 12 }
-        }
+        labels: { color: '#a1a1aa', font: { size: 11 } }
       },
       tooltip: {
-        backgroundColor: 'rgba(30, 41, 59, 0.95)',
-        titleColor: '#F1F5F9',
-        bodyColor: '#F1F5F9',
-        borderColor: 'rgba(148, 163, 184, 0.2)',
+        backgroundColor: '#12121a',
+        titleColor: '#f4f4f5',
+        bodyColor: '#f4f4f5',
+        borderColor: '#2a2a3a',
         borderWidth: 1,
-        padding: 12,
-        cornerRadius: 8
+        padding: 10,
+        cornerRadius: 6
       }
     },
     scales: {
-      x: {
-        grid: { color: 'rgba(148, 163, 184, 0.1)' },
-        ticks: { color: '#94A3B8' }
-      },
-      y: {
-        beginAtZero: false,
-        grid: { color: 'rgba(148, 163, 184, 0.1)' },
-        ticks: { color: '#94A3B8' }
-      }
+      x: { grid: { color: '#2a2a3a' }, ticks: { color: '#71717a' } },
+      y: { grid: { color: '#2a2a3a' }, ticks: { color: '#71717a' } }
     }
   };
 
+  const tempData = {
+    labels: data.years,
+    datasets: [{
+      label: t('charts.temperature'),
+      data: data.temperature,
+      borderColor: '#ef4444',
+      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      fill: true,
+      tension: 0.4
+    }]
+  };
+
+  const co2Data = {
+    labels: data.years,
+    datasets: [{
+      label: t('charts.co2'),
+      data: data.co2,
+      borderColor: '#22d3ee',
+      backgroundColor: 'rgba(34, 211, 238, 0.1)',
+      fill: true,
+      tension: 0.4
+    }]
+  };
+
   return (
-    <Box sx={{ 
-      height: '100%',
-      display: 'grid',
-      gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-      gap: 2
-    }}>
-      <Box sx={{ height: '100%', minHeight: 250 }}>
-        <Line options={options} data={temperatureData} />
-      </Box>
-      <Box sx={{ height: '100%', minHeight: 250 }}>
+    <div className="h-full grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="h-full min-h-[200px]">
+        <Line options={options} data={tempData} />
+      </div>
+      <div className="h-full min-h-[200px]">
         <Line options={options} data={co2Data} />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

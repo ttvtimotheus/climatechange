@@ -1,212 +1,62 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Paper,
-  Typography,
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  LinearProgress,
-  Chip,
-  Stack,
-  Tooltip,
-  IconButton
-} from '@mui/material';
-import {
-  Whatshot,
-  WaterDrop,
-  Storm,
-  Grass,
-  Warning,
-  Info
-} from '@mui/icons-material';
+import { useMemo } from 'react';
+import { Flame, Droplets, CloudLightning, Leaf } from 'lucide-react';
+import { cn } from '../lib/utils';
 
-const DisasterCard = ({ 
-  title, 
-  probability, 
-  severity, 
-  icon: Icon, 
-  color,
-  description,
-  affectedRegions
-}) => (
-  <Card 
-    elevation={0} 
-    sx={{ 
-      bgcolor: 'background.default',
-      height: '100%',
-      position: 'relative',
-      overflow: 'visible'
-    }}
-  >
-    <CardContent>
-      <Box 
-        sx={{ 
-          position: 'absolute',
-          top: -20,
-          left: 16,
-          bgcolor: color,
-          borderRadius: '50%',
-          p: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-        }}
-      >
-        <Icon sx={{ color: 'white' }} />
-      </Box>
+const DISASTERS = [
+  { key: 'heat', title: 'Heat Waves', icon: Flame, color: 'text-red-400', bg: 'bg-red-400', probMult: 20, sevMult: 15 },
+  { key: 'flood', title: 'Flooding', icon: Droplets, color: 'text-blue-400', bg: 'bg-blue-400', probMult: 15, sevMult: 18 },
+  { key: 'storm', title: 'Storms', icon: CloudLightning, color: 'text-amber-400', bg: 'bg-amber-400', probMult: 12, sevMult: 16 },
+  { key: 'drought', title: 'Droughts', icon: Leaf, color: 'text-orange-700', bg: 'bg-orange-700', probMult: 18, sevMult: 20 }
+];
 
-      <Box sx={{ ml: 5, mt: 1 }}>
-        <Typography variant="h6" gutterBottom>
-          {title}
-        </Typography>
-
-        <Stack spacing={2}>
-          <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Wahrscheinlichkeit
-            </Typography>
-            <LinearProgress 
-              variant="determinate" 
-              value={probability}
-              sx={{
-                height: 8,
-                borderRadius: 4,
-                bgcolor: `${color}22`,
-                '& .MuiLinearProgress-bar': {
-                  bgcolor: color
-                }
-              }}
-            />
-            <Typography variant="caption" color="text.secondary">
-              {probability}%
-            </Typography>
-          </Box>
-
-          <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Schweregrad
-            </Typography>
-            <LinearProgress 
-              variant="determinate" 
-              value={severity}
-              sx={{
-                height: 8,
-                borderRadius: 4,
-                bgcolor: `${color}22`,
-                '& .MuiLinearProgress-bar': {
-                  bgcolor: color
-                }
-              }}
-            />
-            <Typography variant="caption" color="text.secondary">
-              {severity}%
-            </Typography>
-          </Box>
-
-          <Typography variant="body2" color="text.secondary">
-            {description}
-          </Typography>
-
-          <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Betroffene Regionen:
-            </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {affectedRegions.map((region, index) => (
-                <Chip 
-                  key={index}
-                  label={region}
-                  size="small"
-                  sx={{ 
-                    bgcolor: `${color}22`,
-                    color: color,
-                    '& .MuiChip-label': {
-                      px: 1
-                    }
-                  }}
-                />
-              ))}
-            </Stack>
-          </Box>
-        </Stack>
-      </Box>
-    </CardContent>
-  </Card>
-);
-
-const DisasterSimulator = ({ temperature, year }) => {
-  const [disasters, setDisasters] = useState([]);
-
-  useEffect(() => {
-    // Berechne Katastrophenwahrscheinlichkeiten basierend auf Temperatur
-    const calculateDisasters = () => [
-      {
-        title: 'Hitzewellen',
-        probability: Math.min(100, Math.round(temperature * 20)),
-        severity: Math.min(100, Math.round(temperature * 15)),
-        icon: Whatshot,
-        color: '#f44336',
-        description: 'Längere und intensivere Hitzewellen mit Temperaturen über 40°C',
-        affectedRegions: ['Süddeutschland', 'Rheinland', 'Brandenburg']
-      },
-      {
-        title: 'Überflutungen',
-        probability: Math.min(100, Math.round(temperature * 15)),
-        severity: Math.min(100, Math.round(temperature * 18)),
-        icon: WaterDrop,
-        color: '#2196f3',
-        description: 'Starkregen und Flusshochwasser mit erhöhtem Überschwemmungsrisiko',
-        affectedRegions: ['Norddeutschland', 'Rheinland', 'Alpenvorland']
-      },
-      {
-        title: 'Stürme',
-        probability: Math.min(100, Math.round(temperature * 12)),
-        severity: Math.min(100, Math.round(temperature * 16)),
-        icon: Storm,
-        color: '#ff9800',
-        description: 'Zunehmende Häufigkeit und Intensität von Stürmen und Orkanen',
-        affectedRegions: ['Küstenregionen', 'Norddeutsche Tiefebene']
-      },
-      {
-        title: 'Dürren',
-        probability: Math.min(100, Math.round(temperature * 18)),
-        severity: Math.min(100, Math.round(temperature * 20)),
-        icon: Grass,
-        color: '#795548',
-        description: 'Langanhaltende Trockenperioden mit Auswirkungen auf Landwirtschaft',
-        affectedRegions: ['Ostdeutschland', 'Brandenburg', 'Sachsen-Anhalt']
-      }
-    ];
-
-    setDisasters(calculateDisasters());
-  }, [temperature]);
+const DisasterSimulator = ({ temperature = 0, year }) => {
+  const disasters = useMemo(() => 
+    DISASTERS.map(d => ({
+      ...d,
+      probability: Math.min(100, Math.round(temperature * d.probMult)),
+      severity: Math.min(100, Math.round(temperature * d.sevMult))
+    })), [temperature]);
 
   return (
-    <Paper elevation={0} sx={{ p: 3, borderRadius: 3 }}>
-      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
-          Naturkatastrophen-Prognose
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          für {year}
-        </Typography>
-        <Tooltip title="Prognose basierend auf aktuellen Klimamodellen und historischen Daten">
-          <IconButton size="small">
-            <Info fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Box>
+    <div className="h-full">
+      <div className="flex items-center gap-2 mb-4">
+        <h3 className="text-sm font-semibold text-accent">Disaster Forecast</h3>
+        <span className="text-xs text-text-muted">for {year}</span>
+      </div>
 
-      <Grid container spacing={3}>
-        {disasters.map((disaster, index) => (
-          <Grid item xs={12} md={6} key={index}>
-            <DisasterCard {...disaster} />
-          </Grid>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {disasters.map(({ key, title, icon: Icon, color, bg, probability, severity }) => (
+          <div key={key} className="p-3 rounded-lg bg-surface-hover border border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Icon className={cn('w-5 h-5', color)} />
+              <span className="text-sm font-medium">{title}</span>
+            </div>
+            
+            <div className="space-y-2">
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-text-muted">Probability</span>
+                  <span className={color}>{probability}%</span>
+                </div>
+                <div className="h-1.5 bg-border rounded-full overflow-hidden">
+                  <div className={cn('h-full rounded-full', bg)} style={{ width: `${probability}%` }} />
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-text-muted">Severity</span>
+                  <span className={color}>{severity}%</span>
+                </div>
+                <div className="h-1.5 bg-border rounded-full overflow-hidden">
+                  <div className={cn('h-full rounded-full', bg)} style={{ width: `${severity}%` }} />
+                </div>
+              </div>
+            </div>
+          </div>
         ))}
-      </Grid>
-    </Paper>
+      </div>
+    </div>
   );
 };
 

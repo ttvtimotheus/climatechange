@@ -1,4 +1,4 @@
-import React, { memo, useRef } from 'react';
+import { memo } from 'react';
 import {
   ComposableMap,
   Geographies,
@@ -6,43 +6,18 @@ import {
   Marker,
   ZoomableGroup
 } from 'react-simple-maps';
-import { Box, Tooltip, alpha } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 
-// Temperature color scale - more gradual gradient
 const getTemperatureColor = (value) => {
-  if (value >= 4) return '#DC2626'; // red-600
-  if (value >= 3) return '#EA580C'; // orange-600
-  if (value >= 2) return '#F59E0B'; // amber-500
-  if (value >= 1) return '#84CC16'; // lime-500
-  return '#22C55E'; // green-500
+  if (value >= 4) return '#DC2626';
+  if (value >= 3) return '#EA580C';
+  if (value >= 2) return '#F59E0B';
+  if (value >= 1) return '#84CC16';
+  return '#22C55E';
 };
 
-const WorldMap = ({ 
-  data = [], 
-  year,
-  width = '100%',
-  height = '100%'
-}) => {
-  const theme = useTheme();
-  const mapRef = useRef();
-
+const WorldMap = ({ data = [] }) => {
   return (
-    <Box 
-      ref={mapRef}
-      sx={{ 
-        width,
-        height,
-        bgcolor: theme.palette.background.default,
-        borderRadius: 4,
-        overflow: 'hidden',
-        position: 'relative',
-        '& path': {
-          transition: 'all 0.3s ease',
-          outline: 'none',
-        }
-      }}
-    >
+    <div className="w-full h-full bg-background overflow-hidden">
       <ComposableMap
         projectionConfig={{
           rotate: [-10, 0, 0],
@@ -61,22 +36,13 @@ const WorldMap = ({
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}
-                  fill={alpha(theme.palette.primary.main, 0.1)}
-                  stroke={alpha(theme.palette.primary.main, 0.3)}
+                  fill="rgba(34, 211, 238, 0.08)"
+                  stroke="rgba(34, 211, 238, 0.2)"
                   strokeWidth={0.5}
                   style={{
-                    default: {
-                      outline: 'none',
-                    },
-                    hover: {
-                      fill: alpha(theme.palette.primary.main, 0.2),
-                      outline: 'none',
-                      cursor: 'pointer'
-                    },
-                    pressed: {
-                      fill: alpha(theme.palette.primary.main, 0.3),
-                      outline: 'none'
-                    }
+                    default: { outline: 'none' },
+                    hover: { fill: 'rgba(34, 211, 238, 0.15)', outline: 'none', cursor: 'pointer' },
+                    pressed: { fill: 'rgba(34, 211, 238, 0.2)', outline: 'none' }
                   }}
                 />
               ))
@@ -89,51 +55,36 @@ const WorldMap = ({
             
             return (
               <Marker key={label} coordinates={[lng, lat]}>
-                <Tooltip 
-                  title={`${label}: +${value.toFixed(1)}°C`}
-                  arrow
-                  placement="top"
-                >
-                  <g style={{ cursor: 'pointer' }}>
-                    {/* Outer glow */}
-                    <circle
-                      r={size + 3}
-                      fill={alpha(color, 0.2)}
-                      style={{ transition: 'all 0.3s ease' }}
-                    />
-                    {/* Main circle */}
-                    <circle
-                      r={size}
-                      fill={color}
-                      stroke={theme.palette.background.paper}
-                      strokeWidth={1.5}
-                      style={{
-                        transition: 'all 0.3s ease',
-                        filter: `drop-shadow(0 2px 4px ${alpha(color, 0.4)})`
-                      }}
-                    />
-                    {/* Label */}
-                    <text
-                      textAnchor="middle"
-                      y={-size - 6}
-                      style={{
-                        fontFamily: theme.typography.fontFamily,
-                        fill: theme.palette.text.primary,
-                        fontSize: '9px',
-                        fontWeight: 600,
-                        filter: `drop-shadow(0 1px 2px ${alpha('#000', 0.7)})`
-                      }}
-                    >
-                      {label}
-                    </text>
-                  </g>
-                </Tooltip>
+                <g style={{ cursor: 'pointer' }}>
+                  <circle r={size + 3} fill={`${color}33`} />
+                  <circle
+                    r={size}
+                    fill={color}
+                    stroke="#12121a"
+                    strokeWidth={1.5}
+                    style={{ filter: `drop-shadow(0 2px 4px ${color}66)` }}
+                  />
+                  <text
+                    textAnchor="middle"
+                    y={-size - 6}
+                    style={{
+                      fontFamily: 'Inter, system-ui, sans-serif',
+                      fill: '#f4f4f5',
+                      fontSize: '9px',
+                      fontWeight: 600,
+                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
+                    }}
+                  >
+                    {label}
+                  </text>
+                </g>
+                <title>{`${label}: +${value.toFixed(1)}°C`}</title>
               </Marker>
             );
           })}
         </ZoomableGroup>
       </ComposableMap>
-    </Box>
+    </div>
   );
 };
 

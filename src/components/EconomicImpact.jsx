@@ -1,129 +1,43 @@
-import React from 'react';
-import { 
-  Paper, 
-  Typography, 
-  Box, 
-  Grid,
-  LinearProgress,
-  Tooltip,
-  IconButton,
-  Stack
-} from '@mui/material';
-import {
-  TrendingUp,
-  People,
-  Euro,
-  Agriculture,
-  WaterDrop,
-  WarningAmber,
-  Info
-} from '@mui/icons-material';
+import { TrendingUp, Users, DollarSign, Wheat, Droplets, AlertTriangle } from 'lucide-react';
+import { cn } from '../lib/utils';
 
-const ImpactIndicator = ({ label, value, icon: Icon, color, tooltip }) => (
-  <Box sx={{ mb: 2 }}>
-    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-      <Icon sx={{ color }} />
-      <Typography variant="body2" color="text.secondary">
-        {label}
-      </Typography>
-      <Tooltip title={tooltip}>
-        <IconButton size="small">
-          <Info fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    </Stack>
-    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-      <Box sx={{ width: '100%', mr: 1 }}>
-        <LinearProgress
-          variant="determinate"
-          value={value}
-          sx={{
-            height: 8,
-            borderRadius: 4,
-            backgroundColor: `${color}22`,
-            '& .MuiLinearProgress-bar': {
-              backgroundColor: color,
-            },
-          }}
-        />
-      </Box>
-      <Box sx={{ minWidth: 35 }}>
-        <Typography variant="body2" color="text.secondary">{value}%</Typography>
-      </Box>
-    </Box>
-  </Box>
-);
+const INDICATORS = [
+  { key: 'economicGrowth', label: 'Economic Growth Impact', icon: TrendingUp, color: 'bg-blue-400' },
+  { key: 'populationAffected', label: 'Population Affected', icon: Users, color: 'bg-purple-400' },
+  { key: 'gdpImpact', label: 'GDP Impact', icon: DollarSign, color: 'bg-emerald-400' },
+  { key: 'agriculturalLoss', label: 'Agricultural Loss', icon: Wheat, color: 'bg-amber-400' },
+  { key: 'waterScarcity', label: 'Water Scarcity', icon: Droplets, color: 'bg-cyan-400' },
+  { key: 'disasterRisk', label: 'Disaster Risk', icon: AlertTriangle, color: 'bg-red-400' }
+];
 
 const EconomicImpact = ({ data = {} }) => {
-  const {
-    economicGrowth = 0,
-    populationAffected = 0,
-    gdpImpact = 0,
-    agriculturalLoss = 0,
-    waterScarcity = 0,
-    disasterRisk = 0
-  } = data;
-
   return (
-    <Paper elevation={0} sx={{ p: 3, borderRadius: 3 }}>
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'primary.main', mb: 3 }}>
-        Wirtschaftliche & Soziale Auswirkungen
-      </Typography>
+    <div className="h-full">
+      <h3 className="text-sm font-semibold text-accent mb-4">Economic & Social Impact</h3>
       
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <ImpactIndicator
-            label="Wirtschaftswachstum-Einfluss"
-            value={economicGrowth}
-            icon={TrendingUp}
-            color="#2196f3"
-            tooltip="Prognostizierte Auswirkung auf das jährliche Wirtschaftswachstum"
-          />
-          
-          <ImpactIndicator
-            label="Betroffene Bevölkerung"
-            value={populationAffected}
-            icon={People}
-            color="#9c27b0"
-            tooltip="Prozentsatz der Bevölkerung, der von Klimaauswirkungen betroffen ist"
-          />
-          
-          <ImpactIndicator
-            label="BIP-Auswirkung"
-            value={gdpImpact}
-            icon={Euro}
-            color="#4caf50"
-            tooltip="Geschätzter Einfluss auf das Bruttoinlandsprodukt"
-          />
-        </Grid>
-        
-        <Grid item xs={12} md={6}>
-          <ImpactIndicator
-            label="Landwirtschaftliche Verluste"
-            value={agriculturalLoss}
-            icon={Agriculture}
-            color="#ff9800"
-            tooltip="Prognostizierte Ernteverluste und Auswirkungen auf die Landwirtschaft"
-          />
-          
-          <ImpactIndicator
-            label="Wasserknappheit"
-            value={waterScarcity}
-            icon={WaterDrop}
-            color="#00bcd4"
-            tooltip="Risiko von Wasserknappheit in betroffenen Regionen"
-          />
-          
-          <ImpactIndicator
-            label="Katastrophenrisiko"
-            value={disasterRisk}
-            icon={WarningAmber}
-            color="#f44336"
-            tooltip="Wahrscheinlichkeit von klimabedingten Naturkatastrophen"
-          />
-        </Grid>
-      </Grid>
-    </Paper>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {INDICATORS.map(({ key, label, icon: Icon, color }) => {
+          const value = data[key] || 0;
+          return (
+            <div key={key} className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Icon className={cn('w-4 h-4', color.replace('bg-', 'text-'))} />
+                <span className="text-xs text-text-secondary">{label}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
+                  <div 
+                    className={cn('h-full rounded-full transition-all duration-500', color)}
+                    style={{ width: `${value}%` }}
+                  />
+                </div>
+                <span className="text-xs font-medium text-text-primary w-10 text-right">{value}%</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 

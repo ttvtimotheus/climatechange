@@ -1,30 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  CssBaseline, 
-  Paper, 
-  Tab, 
-  Tabs, 
-  ThemeProvider,
-  AppBar,
-  Toolbar,
-  Typography,
-  IconButton,
-  Container,
-  Chip,
-  alpha,
-  useMediaQuery
-} from '@mui/material';
-import { SnackbarProvider } from 'notistack';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Public as GlobeIcon,
-  Thermostat as TempIcon,
-  TrendingUp,
-  TrendingDown,
-  Timeline
-} from '@mui/icons-material';
-import theme from './theme';
+import { Globe, Thermometer, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Badge } from './components/ui';
 import Map from './components/Map';
 import ClimateControls from './components/ClimateControls';
 import DataVisualization from './components/DataVisualization';
@@ -35,18 +12,21 @@ import GreenhouseEffect from './components/GreenhouseEffect';
 import { calculateClimateData, calculateRiskLevels } from './services/climateService';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import LanguageSelector from './components/LanguageSelector';
+import { cn } from './lib/utils';
 
-const SCENARIO_ICONS = {
-  optimistic: <TrendingDown sx={{ fontSize: 16 }} />,
-  moderate: <Timeline sx={{ fontSize: 16 }} />,
-  pessimistic: <TrendingUp sx={{ fontSize: 16 }} />
+const SCENARIOS = {
+  optimistic: { icon: TrendingDown, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30' },
+  moderate: { icon: Minus, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30' },
+  pessimistic: { icon: TrendingUp, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30' }
 };
 
-const SCENARIO_COLORS = {
-  optimistic: '#10B981',
-  moderate: '#F59E0B', 
-  pessimistic: '#EF4444'
-};
+const TABS = [
+  { value: 0, key: 'climateData' },
+  { value: 1, key: 'greenhouseEffect' },
+  { value: 2, key: 'economicImpact' },
+  { value: 3, key: 'energyMix' },
+  { value: 4, key: 'naturalDisasters' }
+];
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState(0);
@@ -65,48 +45,26 @@ function AppContent() {
     nuclear: 10
   });
   const { t } = useLanguage();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
     const data = calculateClimateData(selectedScenario, energyMix);
     setClimateData(data);
-    
     const risks = calculateRiskLevels(data, selectedYear);
     setRiskLevels(risks);
   }, [selectedScenario, selectedYear, energyMix]);
 
-  const handleScenarioChange = (scenario) => {
-    setSelectedScenario(scenario);
-  };
-
-  const handleYearChange = (year) => {
-    setSelectedYear(year);
-  };
-
   const handleEnergyMixChange = (mix) => {
-    switch (mix) {
-      case 'renewable':
-        setEnergyMix({ renewable: 80, fossil: 10, nuclear: 10 });
-        break;
-      case 'mixed':
-        setEnergyMix({ renewable: 40, fossil: 40, nuclear: 20 });
-        break;
-      case 'fossil':
-        setEnergyMix({ renewable: 20, fossil: 70, nuclear: 10 });
-        break;
-      default:
-        break;
-    }
+    const presets = {
+      renewable: { renewable: 80, fossil: 10, nuclear: 10 },
+      mixed: { renewable: 40, fossil: 40, nuclear: 20 },
+      fossil: { renewable: 20, fossil: 70, nuclear: 10 }
+    };
+    if (presets[mix]) setEnergyMix(presets[mix]);
   };
 
-  const handleDetailedEnergyMixChange = (newMix) => {
-    setEnergyMix(newMix);
-  };
-
-  // Calculate current temperature for display
   const currentTemp = climateData?.temperature?.[climateData.years.indexOf(selectedYear)] || 0;
+  const ScenarioIcon = SCENARIOS[selectedScenario].icon;
 
-  // Calculate economic impact based on climate data
   const economicData = {
     economicGrowth: Math.min(100, Math.round(currentTemp * 15)),
     populationAffected: Math.min(100, Math.round(currentTemp * 12)),
@@ -117,216 +75,113 @@ function AppContent() {
   };
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh', 
-      bgcolor: 'background.default',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      {/* Modern Header */}
-      <AppBar 
-        position="static" 
-        elevation={0}
-        sx={{ 
-          bgcolor: 'background.paper',
-          borderBottom: 1,
-          borderColor: 'divider'
-        }}
-      >
-        <Toolbar sx={{ gap: 2 }}>
-          <GlobeIcon sx={{ color: 'primary.main', fontSize: 32 }} />
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 700 }}>
-              {t('app.title')}
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {t('app.subtitle')}
-            </Typography>
-          </Box>
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      {/* Header */}
+      <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface/50 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <Globe className="w-7 h-7 text-accent" />
+          <div>
+            <h1 className="text-lg font-semibold text-text-primary">{t('app.title')}</h1>
+            <p className="text-xs text-text-muted">{t('app.subtitle')}</p>
+          </div>
+        </div>
+
+        <div className="hidden md:flex items-center gap-3">
+          <div className={cn(
+            'flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium',
+            SCENARIOS[selectedScenario].bg,
+            SCENARIOS[selectedScenario].border,
+            SCENARIOS[selectedScenario].color
+          )}>
+            <ScenarioIcon className="w-4 h-4" />
+            {t(`scenarios.${selectedScenario}.label`)}
+          </div>
           
-          {/* Current Stats */}
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
-            <Chip
-              icon={SCENARIO_ICONS[selectedScenario]}
-              label={t(`scenarios.${selectedScenario}.label`)}
-              sx={{ 
-                bgcolor: alpha(SCENARIO_COLORS[selectedScenario], 0.15),
-                color: SCENARIO_COLORS[selectedScenario],
-                fontWeight: 600
-              }}
-            />
-            <Chip
-              icon={<TempIcon />}
-              label={`+${currentTemp.toFixed(1)}°C`}
-              sx={{ 
-                bgcolor: alpha(theme.palette.error.main, 0.15),
-                color: theme.palette.error.main,
-                fontWeight: 600
-              }}
-            />
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {selectedYear}
-            </Typography>
-          </Box>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-medium">
+            <Thermometer className="w-4 h-4" />
+            +{currentTemp.toFixed(1)}°C
+          </div>
           
-          <LanguageSelector />
-        </Toolbar>
-      </AppBar>
+          <span className="text-text-muted text-sm font-mono">{selectedYear}</span>
+        </div>
+
+        <LanguageSelector />
+      </header>
 
       {/* Main Content */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* Top Section: Map + Controls */}
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', lg: 'row' }, 
-          flex: 1,
-          minHeight: 0
-        }}>
-          {/* Map Area */}
-          <Box sx={{ 
-            flex: { xs: '1', lg: '2' }, 
-            minHeight: { xs: 350, lg: 'auto' },
-            position: 'relative'
-          }}>
-            <Paper 
-              component={motion.div}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              elevation={0}
-              sx={{ 
-                height: '100%', 
-                overflow: 'hidden',
-                borderRadius: 0,
-                borderRight: { lg: 1 },
-                borderBottom: { xs: 1, lg: 0 },
-                borderColor: 'divider'
-              }}
-            >
-              <Map
-                climateData={climateData}
-                selectedYear={selectedYear}
-                selectedScenario={selectedScenario}
-                riskLevels={riskLevels}
-                onYearChange={handleYearChange}
-                onScenarioChange={handleScenarioChange}
-              />
-            </Paper>
-          </Box>
-          
-          {/* Controls Sidebar */}
-          <Box sx={{ 
-            width: { xs: '100%', lg: 350 },
-            flexShrink: 0,
-            overflow: 'auto',
-            maxHeight: { xs: 300, lg: 'none' }
-          }}>
-            <Paper 
-              component={motion.div}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              elevation={0}
-              sx={{ 
-                height: '100%',
-                borderRadius: 0
-              }}
-            >
-              <ClimateControls
-                selectedScenario={selectedScenario}
-                selectedYear={selectedYear}
-                onScenarioChange={handleScenarioChange}
-                onYearChange={handleYearChange}
-                onEnergyMixChange={handleEnergyMixChange}
-                riskLevels={riskLevels}
-              />
-            </Paper>
-          </Box>
-        </Box>
+      <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+        {/* Map */}
+        <div className="flex-[2] min-h-[300px] lg:min-h-0 lg:border-r border-border">
+          <Map
+            selectedYear={selectedYear}
+            selectedScenario={selectedScenario}
+            onYearChange={setSelectedYear}
+            onScenarioChange={setSelectedScenario}
+          />
+        </div>
 
-        {/* Bottom Section: Tabs */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            height: { xs: 350, md: 400 },
-            flexShrink: 0,
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            borderTop: 1,
-            borderColor: 'divider',
-            borderRadius: 0
-          }}
-        >
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs 
-              value={activeTab} 
-              onChange={(e, newValue) => setActiveTab(newValue)}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{
-                minHeight: 48,
-                '& .MuiTab-root': {
-                  minHeight: 48,
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  textTransform: 'none'
-                },
-              }}
-            >
-              <Tab label={t('tabs.climateData')} />
-              <Tab label={t('tabs.greenhouseEffect')} />
-              <Tab label={t('tabs.economicImpact')} />
-              <Tab label={t('tabs.energyMix')} />
-              <Tab label={t('tabs.naturalDisasters')} />
-            </Tabs>
-          </Box>
+        {/* Controls */}
+        <div className="w-full lg:w-80 flex-shrink-0 border-b lg:border-b-0 border-border overflow-auto">
+          <ClimateControls
+            selectedScenario={selectedScenario}
+            selectedYear={selectedYear}
+            onScenarioChange={setSelectedScenario}
+            onYearChange={setSelectedYear}
+            onEnergyMixChange={handleEnergyMixChange}
+            riskLevels={riskLevels}
+          />
+        </div>
+      </div>
 
-          <Box sx={{ p: 2, flex: 1, overflow: 'auto' }}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                style={{ height: '100%' }}
-              >
-                {activeTab === 0 && <DataVisualization data={climateData} />}
-                {activeTab === 1 && (
-                  <GreenhouseEffect 
-                    climateData={climateData}
-                  />
-                )}
-                {activeTab === 2 && <EconomicImpact data={economicData} />}
-                {activeTab === 3 && (
-                  <EnergyMixSimulator onEnergyMixChange={handleDetailedEnergyMixChange} />
-                )}
-                {activeTab === 4 && (
-                  <DisasterSimulator 
-                    temperature={currentTemp}
-                    year={selectedYear}
-                  />
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </Box>
-        </Paper>
-      </Box>
-    </Box>
+      {/* Tabs Section */}
+      <div className="h-80 lg:h-96 flex-shrink-0 border-t border-border flex flex-col">
+        {/* Tab Navigation */}
+        <div className="flex gap-1 p-2 border-b border-border overflow-x-auto">
+          {TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors',
+                activeTab === tab.value
+                  ? 'bg-accent text-background'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'
+              )}
+            >
+              {t(`tabs.${tab.key}`)}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        <div className="flex-1 p-4 overflow-auto">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className="h-full"
+            >
+              {activeTab === 0 && <DataVisualization data={climateData} />}
+              {activeTab === 1 && <GreenhouseEffect climateData={climateData} />}
+              {activeTab === 2 && <EconomicImpact data={economicData} />}
+              {activeTab === 3 && <EnergyMixSimulator onEnergyMixChange={setEnergyMix} />}
+              {activeTab === 4 && <DisasterSimulator temperature={currentTemp} year={selectedYear} />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
   );
 }
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <LanguageProvider>
-        <SnackbarProvider>
-          <CssBaseline />
-          <AppContent />
-        </SnackbarProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }
 

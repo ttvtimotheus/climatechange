@@ -1,18 +1,31 @@
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
 
-  color-scheme: dark;
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --color-background: #0a0a0f;
+  --color-surface: #12121a;
+  --color-surface-hover: #1a1a24;
+  --color-border: #2a2a3a;
+  
+  --color-text-primary: #f4f4f5;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+  
+  --color-accent: #22d3ee;
+  --color-accent-hover: #06b6d4;
+  
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
 }
 
 html, body, #root {
@@ -20,34 +33,33 @@ html, body, #root {
   padding: 0;
   min-width: 320px;
   height: 100%;
-  overflow: hidden;
+  background: #0a0a0f;
+  color: #f4f4f5;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Smooth scrolling for nested containers */
-.MuiBox-root {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-}
-
-.MuiBox-root::-webkit-scrollbar {
+/* Custom scrollbar */
+::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
-.MuiBox-root::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.MuiBox-root::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2);
+::-webkit-scrollbar-thumb {
+  background: #2a2a3a;
   border-radius: 3px;
 }
 
-.MuiBox-root::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+::-webkit-scrollbar-thumb:hover {
+  background: #71717a;
 }
 
-/* Chart.js canvas improvements */
+/* Chart.js */
 canvas {
   max-width: 100%;
 }

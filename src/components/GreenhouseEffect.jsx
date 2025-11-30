@@ -1,15 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Paper,
-  Typography,
-  Box,
-  Slider,
-  Stack,
-  IconButton,
-  Tooltip,
-  Grid
-} from '@mui/material';
-import { Info, Cloud } from '@mui/icons-material';
+import { useState, useEffect, useMemo } from 'react';
+import { Cloud } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -18,247 +8,102 @@ import {
   PointElement,
   LineElement,
   Title,
-  Tooltip as ChartTooltip,
+  Tooltip,
   Legend,
   Filler
 } from 'chart.js';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  ChartTooltip,
-  Legend,
-  Filler
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
-const calculateMovingAverage = (data, windowSize) => {
-  const result = [];
-  for (let i = 0; i < data.length; i++) {
-    let sum = 0;
-    let count = 0;
-    
-    // Berechne den Durchschnitt für das Fenster
-    for (let j = Math.max(0, i - windowSize + 1); j <= i; j++) {
-      sum += data[j];
-      count++;
-    }
-    
-    result.push(Number((sum / count).toFixed(2)));
-  }
-  return result;
+const calcMovingAvg = (data, window) => {
+  return data.map((_, i) => {
+    const start = Math.max(0, i - window + 1);
+    const slice = data.slice(start, i + 1);
+    return Number((slice.reduce((a, b) => a + b, 0) / slice.length).toFixed(2));
+  });
 };
 
 const GreenhouseEffect = ({ climateData }) => {
   const [windowSize, setWindowSize] = useState(20);
-  const [movingAverages, setMovingAverages] = useState({
-    temperature: [],
-    co2: []
-  });
 
-  useEffect(() => {
-    if (climateData?.temperature && climateData?.co2) {
-      setMovingAverages({
-        temperature: calculateMovingAverage(climateData.temperature, windowSize),
-        co2: calculateMovingAverage(climateData.co2, windowSize)
-      });
-    }
+  const movingAverages = useMemo(() => {
+    if (!climateData?.temperature) return { temperature: [], co2: [] };
+    return {
+      temperature: calcMovingAvg(climateData.temperature, windowSize),
+      co2: calcMovingAvg(climateData.co2, windowSize)
+    };
   }, [climateData, windowSize]);
 
   const chartData = {
     labels: climateData?.years || [],
     datasets: [
-      {
-        label: 'Temperatur (°C)',
-        data: climateData?.temperature || [],
-        borderColor: 'rgba(255, 99, 132, 0.5)',
-        borderWidth: 1,
-        pointRadius: 0,
-        borderDash: [5, 5],
-      },
-      {
-        label: `${windowSize}-Jahres-Mittel Temperatur`,
-        data: movingAverages.temperature,
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.1)',
-        fill: true,
-        tension: 0.4,
-      },
-      {
-        label: 'CO₂ (ppm)',
-        data: climateData?.co2 || [],
-        borderColor: 'rgba(75, 192, 192, 0.5)',
-        borderWidth: 1,
-        pointRadius: 0,
-        borderDash: [5, 5],
-        yAxisID: 'co2',
-      },
-      {
-        label: `${windowSize}-Jahres-Mittel CO₂`,
-        data: movingAverages.co2,
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.1)',
-        fill: true,
-        tension: 0.4,
-        yAxisID: 'co2',
-      }
+      { label: 'Temperature', data: climateData?.temperature || [], borderColor: 'rgba(239,68,68,0.4)', borderWidth: 1, pointRadius: 0, borderDash: [5, 5] },
+      { label: `${windowSize}yr Avg Temp`, data: movingAverages.temperature, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.4 },
+      { label: 'CO₂', data: climateData?.co2 || [], borderColor: 'rgba(34,211,238,0.4)', borderWidth: 1, pointRadius: 0, borderDash: [5, 5], yAxisID: 'co2' },
+      { label: `${windowSize}yr Avg CO₂`, data: movingAverages.co2, borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.1)', fill: true, tension: 0.4, yAxisID: 'co2' }
     ]
   };
 
   const options = {
     responsive: true,
-    interaction: {
-      mode: 'index',
-      intersect: false,
-    },
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
     plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          padding: 20,
-          font: { size: 12 }
-        }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        titleColor: '#000',
-        bodyColor: '#000',
-        borderColor: 'rgba(0, 0, 0, 0.1)',
-        borderWidth: 1,
-        padding: 12,
-        cornerRadius: 8
-      }
+      legend: { position: 'top', labels: { color: '#a1a1aa', font: { size: 10 } } },
+      tooltip: { backgroundColor: '#12121a', titleColor: '#f4f4f5', bodyColor: '#f4f4f5', borderColor: '#2a2a3a', borderWidth: 1 }
     },
     scales: {
-      y: {
-        type: 'linear',
-        display: true,
-        position: 'left',
-        title: {
-          display: true,
-          text: 'Temperaturanstieg (°C)'
-        },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
-        }
-      },
-      co2: {
-        type: 'linear',
-        display: true,
-        position: 'right',
-        title: {
-          display: true,
-          text: 'CO₂-Konzentration (ppm)'
-        },
-        grid: {
-          drawOnChartArea: false
-        }
-      }
+      x: { grid: { color: '#2a2a3a' }, ticks: { color: '#71717a' } },
+      y: { position: 'left', grid: { color: '#2a2a3a' }, ticks: { color: '#71717a' }, title: { display: true, text: 'Temp (°C)', color: '#71717a' } },
+      co2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#71717a' }, title: { display: true, text: 'CO₂ (ppm)', color: '#71717a' } }
     }
   };
 
-  const handleWindowSizeChange = (event, newValue) => {
-    setWindowSize(newValue);
-  };
+  const lastTemp = movingAverages.temperature[movingAverages.temperature.length - 1] || 0;
+  const lastCO2 = movingAverages.co2[movingAverages.co2.length - 1] || 0;
+  const percentage = ((windowSize - 5) / 45) * 100;
 
   return (
-    <Paper elevation={0} sx={{ p: 3, borderRadius: 3 }}>
-      <Stack spacing={3}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Cloud sx={{ color: 'primary.main' }} />
-          <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
-            Treibhauseffekt-Analyse
-          </Typography>
-          <Tooltip title="Visualisierung des gleitenden Durchschnitts für Temperatur und CO₂-Konzentration">
-            <IconButton size="small">
-              <Info fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
+    <div className="h-full flex flex-col">
+      <div className="flex items-center gap-2 mb-3">
+        <Cloud className="w-5 h-5 text-accent" />
+        <h3 className="text-sm font-semibold text-accent">Greenhouse Effect Analysis</h3>
+      </div>
 
-        <Box>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Mittelwert-Zeitraum: {windowSize} Jahre
-          </Typography>
-          <Slider
-            value={windowSize}
-            onChange={handleWindowSizeChange}
-            min={5}
-            max={50}
-            step={5}
-            marks={[
-              { value: 5, label: '5' },
-              { value: 20, label: '20' },
-              { value: 35, label: '35' },
-              { value: 50, label: '50' }
-            ]}
-            sx={{
-              color: 'primary.main',
-              '& .MuiSlider-thumb': {
-                height: 24,
-                width: 24,
-                backgroundColor: '#fff',
-                border: '2px solid currentColor',
-                '&:hover': {
-                  boxShadow: '0 0 0 8px rgba(46, 125, 50, 0.16)',
-                },
-              },
-            }}
-          />
-        </Box>
+      <div className="mb-4">
+        <p className="text-xs text-text-muted mb-2">Moving Average: {windowSize} years</p>
+        <input
+          type="range"
+          min="5"
+          max="50"
+          step="5"
+          value={windowSize}
+          onChange={(e) => setWindowSize(Number(e.target.value))}
+          className="w-full h-1.5 appearance-none bg-border rounded-full cursor-pointer
+            [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 
+            [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full
+            [&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:cursor-pointer"
+          style={{
+            background: `linear-gradient(to right, var(--color-accent) 0%, var(--color-accent) ${percentage}%, var(--color-border) ${percentage}%, var(--color-border) 100%)`
+          }}
+        />
+      </div>
 
-        <Box sx={{ height: '400px' }}>
-          <Line data={chartData} options={options} />
-        </Box>
+      <div className="flex-1 min-h-[200px]">
+        <Line data={chartData} options={options} />
+      </div>
 
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 2, 
-                bgcolor: 'rgba(255, 99, 132, 0.1)',
-                border: '1px solid rgba(255, 99, 132, 0.2)',
-                borderRadius: 2
-              }}
-            >
-              <Typography variant="subtitle2" gutterBottom>
-                Temperatur-Trend
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Durchschnittlicher Anstieg im {windowSize}-Jahres-Mittel:{' '}
-                <strong>
-                  {movingAverages.temperature[movingAverages.temperature.length - 1]?.toFixed(2)}°C
-                </strong>
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 2, 
-                bgcolor: 'rgba(75, 192, 192, 0.1)',
-                border: '1px solid rgba(75, 192, 192, 0.2)',
-                borderRadius: 2
-              }}
-            >
-              <Typography variant="subtitle2" gutterBottom>
-                CO₂-Trend
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Durchschnittliche Konzentration im {windowSize}-Jahres-Mittel:{' '}
-                <strong>
-                  {movingAverages.co2[movingAverages.co2.length - 1]?.toFixed(0)} ppm
-                </strong>
-              </Typography>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Stack>
-    </Paper>
+      <div className="grid grid-cols-2 gap-3 mt-4">
+        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+          <p className="text-xs font-medium text-red-400 mb-1">Temperature Trend</p>
+          <p className="text-lg font-semibold text-red-400">{lastTemp.toFixed(2)}°C</p>
+        </div>
+        <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+          <p className="text-xs font-medium text-cyan-400 mb-1">CO₂ Trend</p>
+          <p className="text-lg font-semibold text-cyan-400">{lastCO2.toFixed(0)} ppm</p>
+        </div>
+      </div>
+    </div>
   );
 };
 

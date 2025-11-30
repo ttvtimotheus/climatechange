@@ -1,22 +1,6 @@
-import React from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  LinearProgress,
-  Tooltip,
-  Card,
-  alpha,
-  Stack
-} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { useLanguage } from '../contexts/LanguageContext';
+import { cn } from '../lib/utils';
 
-// Regional grouping matching actual cities from globeService
 const REGIONS = {
   northEurope: ['Berlin', 'London', 'Moscow', 'Paris'],
   northAmerica: ['New York'],
@@ -25,12 +9,20 @@ const REGIONS = {
   southernHemisphere: ['Sydney', 'Rio', 'Buenos Aires']
 };
 
-const getTemperatureColor = (value, theme) => {
-  if (value >= 4) return theme.palette.error.main;
-  if (value >= 3) return theme.palette.warning.main;
-  if (value >= 2) return theme.palette.warning.light;
-  if (value >= 1) return theme.palette.success.light;
-  return theme.palette.success.main;
+const getTemperatureColor = (value) => {
+  if (value >= 4) return 'text-red-400';
+  if (value >= 3) return 'text-orange-400';
+  if (value >= 2) return 'text-amber-400';
+  if (value >= 1) return 'text-lime-400';
+  return 'text-emerald-400';
+};
+
+const getTemperatureBg = (value) => {
+  if (value >= 4) return 'bg-red-400';
+  if (value >= 3) return 'bg-orange-400';
+  if (value >= 2) return 'bg-amber-400';
+  if (value >= 1) return 'bg-lime-400';
+  return 'bg-emerald-400';
 };
 
 const getRiskLevel = (value) => {
@@ -41,14 +33,14 @@ const getRiskLevel = (value) => {
   return 'riskLevels.low';
 };
 
-const RegionalStats = ({ data = [], year }) => {
-  const theme = useTheme();
+const RegionalStats = ({ data = [] }) => {
   const { t } = useLanguage();
 
-  // Gruppiere Daten nach Regionen
   const regionalData = Object.entries(REGIONS).map(([region, cities]) => {
     const citiesData = data.filter(d => cities.includes(d.label));
-    const avgTemperature = citiesData.reduce((sum, d) => sum + d.value, 0) / citiesData.length;
+    const avgTemperature = citiesData.length > 0 
+      ? citiesData.reduce((sum, d) => sum + d.value, 0) / citiesData.length 
+      : 0;
     
     return {
       region,
@@ -59,124 +51,61 @@ const RegionalStats = ({ data = [], year }) => {
   });
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        height: '100%',
-        bgcolor: 'background.paper',
-        borderRadius: 0,
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-    >
-      <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
-          {t('regions.title')}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {t('regions.subtitle')}
-        </Typography>
-      </Box>
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b border-border">
+        <h3 className="text-sm font-semibold text-accent">{t('regions.title')}</h3>
+        <p className="text-xs text-text-muted mt-1">{t('regions.subtitle')}</p>
+      </div>
 
-      <List sx={{ flex: 1, overflow: 'auto', px: 2 }}>
+      <div className="flex-1 overflow-auto p-3 space-y-3">
         {regionalData.map(({ region, avgTemperature, cities, riskLevel }) => (
-          <Card
+          <div
             key={region}
-            sx={{
-              mb: 2,
-              bgcolor: alpha(theme.palette.primary.main, 0.05),
-              border: 1,
-              borderColor: alpha(theme.palette.primary.main, 0.1),
-              '&:hover': {
-                bgcolor: alpha(theme.palette.primary.main, 0.08),
-              }
-            }}
+            className="p-3 rounded-lg bg-surface-hover/50 border border-border hover:border-accent/30 transition-colors"
           >
-            <Box sx={{ p: 2 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  {t(`regions.${region}`)}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    bgcolor: alpha(getTemperatureColor(avgTemperature, theme), 0.1),
-                    color: getTemperatureColor(avgTemperature, theme),
-                    fontWeight: 500
-                  }}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">{t(`regions.${region}`)}</span>
+              <span className={cn(
+                'text-xs px-2 py-0.5 rounded',
+                getTemperatureColor(avgTemperature),
+                'bg-current/10'
+              )}>
+                {t(riskLevel)}
+              </span>
+            </div>
+
+            <div className="mb-3">
+              <div className="flex items-center gap-2 text-xs mb-1">
+                <span className="text-text-muted">{t('regions.average')}:</span>
+                <span className={cn('font-semibold', getTemperatureColor(avgTemperature))}>
+                  {avgTemperature.toFixed(1)}°C
+                </span>
+              </div>
+              <div className="h-1.5 bg-border rounded-full overflow-hidden">
+                <div 
+                  className={cn('h-full rounded-full transition-all', getTemperatureBg(avgTemperature))}
+                  style={{ width: `${Math.min((avgTemperature / 5) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              {cities.map(city => (
+                <div
+                  key={city.label}
+                  className="flex items-center justify-between py-1 px-2 rounded bg-background/50 text-xs"
                 >
-                  {t(riskLevel)}
-                </Typography>
-              </Stack>
-
-              <Box sx={{ mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-                    {t('regions.average')}:
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: getTemperatureColor(avgTemperature, theme), fontWeight: 600 }}
-                  >
-                    {avgTemperature.toFixed(1)}°C
-                  </Typography>
-                </Box>
-                <Tooltip title={`${avgTemperature.toFixed(1)}°C`}>
-                  <LinearProgress
-                    variant="determinate"
-                    value={Math.min((avgTemperature / 5) * 100, 100)}
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      bgcolor: alpha(theme.palette.primary.main, 0.1),
-                      '& .MuiLinearProgress-bar': {
-                        bgcolor: getTemperatureColor(avgTemperature, theme),
-                        borderRadius: 3,
-                      }
-                    }}
-                  />
-                </Tooltip>
-              </Box>
-
-              <Stack spacing={1}>
-                {cities.map(city => (
-                  <Box
-                    key={city.label}
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      p: 1,
-                      borderRadius: 1,
-                      bgcolor: alpha(theme.palette.common.white, 0.03),
-                      '&:hover': {
-                        bgcolor: alpha(theme.palette.common.white, 0.05),
-                      }
-                    }}
-                  >
-                    <Typography variant="body2">
-                      {city.label}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: getTemperatureColor(city.value, theme),
-                        fontWeight: 500
-                      }}
-                    >
-                      {city.value.toFixed(1)}°C
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
-            </Box>
-          </Card>
+                  <span className="text-text-secondary">{city.label}</span>
+                  <span className={cn('font-medium', getTemperatureColor(city.value))}>
+                    {city.value.toFixed(1)}°C
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         ))}
-      </List>
-    </Paper>
+      </div>
+    </div>
   );
 };
 
