@@ -1,4 +1,4 @@
-import React, { memo, useRef, useEffect } from 'react';
+import React, { memo, useRef } from 'react';
 import {
   ComposableMap,
   Geographies,
@@ -6,16 +6,16 @@ import {
   Marker,
   ZoomableGroup
 } from 'react-simple-maps';
-import { Box, Typography, alpha } from '@mui/material';
+import { Box, Tooltip, alpha } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
-// Farbskala für Temperaturänderungen
-const getTemperatureColor = (value, theme) => {
-  if (value >= 4) return theme.palette.error.main;
-  if (value >= 3) return theme.palette.warning.main;
-  if (value >= 2) return theme.palette.warning.light;
-  if (value >= 1) return theme.palette.success.light;
-  return theme.palette.success.main;
+// Temperature color scale - more gradual gradient
+const getTemperatureColor = (value) => {
+  if (value >= 4) return '#DC2626'; // red-600
+  if (value >= 3) return '#EA580C'; // orange-600
+  if (value >= 2) return '#F59E0B'; // amber-500
+  if (value >= 1) return '#84CC16'; // lime-500
+  return '#22C55E'; // green-500
 };
 
 const WorldMap = ({ 
@@ -26,16 +26,6 @@ const WorldMap = ({
 }) => {
   const theme = useTheme();
   const mapRef = useRef();
-
-  // Berechne optimale Kartengröße basierend auf Container
-  useEffect(() => {
-    if (mapRef.current) {
-      const container = mapRef.current;
-      const containerWidth = container.offsetWidth;
-      const containerHeight = container.offsetHeight;
-      // Hier könnten weitere Anpassungen erfolgen
-    }
-  }, []);
 
   return (
     <Box 
@@ -93,37 +83,54 @@ const WorldMap = ({
             }
           </Geographies>
 
-          {data.map(({ lat, lng, value, label }) => (
-            <Marker key={label} coordinates={[lng, lat]}>
-              <g transform="translate(-6, -6)">
-                <circle
-                  r={Math.max(4, Math.min(value * 2, 10))}
-                  fill={getTemperatureColor(value, theme)}
-                  stroke={theme.palette.background.paper}
-                  strokeWidth={2}
-                  style={{
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    filter: `drop-shadow(0 0 4px ${alpha(getTemperatureColor(value, theme), 0.5)})`
-                  }}
-                />
-                <text
-                  textAnchor="middle"
-                  y={-10}
-                  style={{
-                    fontFamily: theme.typography.fontFamily,
-                    fill: theme.palette.text.primary,
-                    fontSize: '8px',
-                    fontWeight: 500,
-                    filter: `drop-shadow(0 1px 2px ${alpha(theme.palette.common.black, 0.5)})`
-                  }}
+          {data.map(({ lat, lng, value, label }) => {
+            const color = getTemperatureColor(value);
+            const size = Math.max(5, Math.min(value * 2.5 + 4, 14));
+            
+            return (
+              <Marker key={label} coordinates={[lng, lat]}>
+                <Tooltip 
+                  title={`${label}: +${value.toFixed(1)}°C`}
+                  arrow
+                  placement="top"
                 >
-                  {label}
-                </text>
-              </g>
-              <title>{`${label}: ${value.toFixed(1)}°C`}</title>
-            </Marker>
-          ))}
+                  <g style={{ cursor: 'pointer' }}>
+                    {/* Outer glow */}
+                    <circle
+                      r={size + 3}
+                      fill={alpha(color, 0.2)}
+                      style={{ transition: 'all 0.3s ease' }}
+                    />
+                    {/* Main circle */}
+                    <circle
+                      r={size}
+                      fill={color}
+                      stroke={theme.palette.background.paper}
+                      strokeWidth={1.5}
+                      style={{
+                        transition: 'all 0.3s ease',
+                        filter: `drop-shadow(0 2px 4px ${alpha(color, 0.4)})`
+                      }}
+                    />
+                    {/* Label */}
+                    <text
+                      textAnchor="middle"
+                      y={-size - 6}
+                      style={{
+                        fontFamily: theme.typography.fontFamily,
+                        fill: theme.palette.text.primary,
+                        fontSize: '9px',
+                        fontWeight: 600,
+                        filter: `drop-shadow(0 1px 2px ${alpha('#000', 0.7)})`
+                      }}
+                    >
+                      {label}
+                    </text>
+                  </g>
+                </Tooltip>
+              </Marker>
+            );
+          })}
         </ZoomableGroup>
       </ComposableMap>
     </Box>

@@ -6,7 +6,6 @@ import {
   Select,
   MenuItem,
   Stack,
-  Chip,
   alpha,
   Slider,
   Paper
@@ -21,6 +20,8 @@ import { useTheme } from '@mui/material/styles';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const ClimateControls = ({ 
+  selectedScenario = 'moderate',
+  selectedYear = 2025,
   onScenarioChange,
   onYearChange,
   onEnergyMixChange,
@@ -30,18 +31,18 @@ const ClimateControls = ({
   const { t } = useLanguage();
 
   return (
-    <Paper elevation={0} sx={{ p: 3, bgcolor: 'background.paper' }}>
-      <Stack spacing={3}>
+    <Paper elevation={0} sx={{ p: 2.5, bgcolor: 'background.paper', height: '100%' }}>
+      <Stack spacing={2.5}>
         <Box>
-          <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
+          <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary', fontWeight: 500 }}>
             {t('scenarios.title')}
           </Typography>
-          <FormControl fullWidth variant="outlined">
+          <FormControl fullWidth size="small">
             <Select
-              defaultValue="moderate"
+              value={selectedScenario}
               onChange={(e) => onScenarioChange?.(e.target.value)}
               sx={{
-                borderRadius: 2,
+                borderRadius: 1.5,
                 '& .MuiOutlinedInput-notchedOutline': {
                   borderColor: alpha(theme.palette.primary.main, 0.2)
                 }
@@ -55,44 +56,31 @@ const ClimateControls = ({
         </Box>
 
         <Box>
-          <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
-            {t('ui.timePeriod')}
+          <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary', fontWeight: 500 }}>
+            {t('ui.timePeriod')} - {selectedYear}
           </Typography>
-          <Box sx={{ px: 2 }}>
+          <Box sx={{ px: 1 }}>
             <Slider
               min={2025}
               max={2100}
               step={5}
-              defaultValue={2025}
+              value={selectedYear}
               valueLabelDisplay="auto"
-              marks
               onChange={(e, value) => onYearChange?.(value)}
               sx={{
                 color: 'primary.main',
                 '& .MuiSlider-thumb': {
-                  height: 24,
-                  width: 24,
+                  height: 16,
+                  width: 16,
                   backgroundColor: '#fff',
                   border: '2px solid currentColor',
-                  '&:hover': {
-                    boxShadow: '0 0 0 8px rgba(58, 133, 137, 0.16)',
-                  },
                 },
                 '& .MuiSlider-track': {
                   height: 4,
                 },
                 '& .MuiSlider-rail': {
                   height: 4,
-                  opacity: 0.2,
-                },
-                '& .MuiSlider-mark': {
-                  backgroundColor: '#bfbfbf',
-                  height: 8,
-                  width: 1,
-                  '&.MuiSlider-markActive': {
-                    opacity: 1,
-                    backgroundColor: 'currentColor',
-                  },
+                  opacity: 0.3,
                 },
               }}
             />
@@ -100,15 +88,15 @@ const ClimateControls = ({
         </Box>
 
         <Box>
-          <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
+          <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary', fontWeight: 500 }}>
             {t('ui.energyMix')}
           </Typography>
-          <FormControl fullWidth variant="outlined">
+          <FormControl fullWidth size="small">
             <Select
               defaultValue="mixed"
               onChange={(e) => onEnergyMixChange?.(e.target.value)}
               sx={{
-                borderRadius: 2,
+                borderRadius: 1.5,
                 '& .MuiOutlinedInput-notchedOutline': {
                   borderColor: alpha(theme.palette.primary.main, 0.2)
                 }
@@ -122,54 +110,40 @@ const ClimateControls = ({
         </Box>
 
         <Box>
-          <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
+          <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary', fontWeight: 500 }}>
             {t('ui.currentRisks')}
           </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
-            <Chip
-              icon={<WhatshotIcon />}
-              label={`${t('ui.drought')}: ${riskLevels.drought}%`}
-              sx={{
-                bgcolor: alpha(theme.palette.warning.main, 0.1),
-                color: theme.palette.warning.main,
-                '& .MuiChip-icon': {
-                  color: theme.palette.warning.main
-                }
-              }}
-            />
-            <Chip
-              icon={<WaterIcon />}
-              label={`${t('ui.flooding')}: ${riskLevels.flooding}%`}
-              sx={{
-                bgcolor: alpha(theme.palette.info.main, 0.1),
-                color: theme.palette.info.main,
-                '& .MuiChip-icon': {
-                  color: theme.palette.info.main
-                }
-              }}
-            />
-            <Chip
-              icon={<FireIcon />}
-              label={`${t('ui.wildfires')}: ${riskLevels.fires}%`}
-              sx={{
-                bgcolor: alpha(theme.palette.error.main, 0.1),
-                color: theme.palette.error.main,
-                '& .MuiChip-icon': {
-                  color: theme.palette.error.main
-                }
-              }}
-            />
-            <Chip
-              icon={<StormIcon />}
-              label={`${t('ui.storms')}: ${riskLevels.storms}%`}
-              sx={{
-                bgcolor: alpha(theme.palette.secondary.main, 0.1),
-                color: theme.palette.secondary.main,
-                '& .MuiChip-icon': {
-                  color: theme.palette.secondary.main
-                }
-              }}
-            />
+          <Stack spacing={1}>
+            {[
+              { key: 'drought', value: riskLevels.drought, icon: <WhatshotIcon fontSize="small" />, color: theme.palette.warning.main },
+              { key: 'flooding', value: riskLevels.flooding, icon: <WaterIcon fontSize="small" />, color: theme.palette.info.main },
+              { key: 'wildfires', value: riskLevels.fires, icon: <FireIcon fontSize="small" />, color: theme.palette.error.main },
+              { key: 'storms', value: riskLevels.storms, icon: <StormIcon fontSize="small" />, color: theme.palette.secondary.main }
+            ].map(({ key, value, icon, color }) => (
+              <Box key={key} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ color, display: 'flex' }}>{icon}</Box>
+                <Typography variant="caption" sx={{ flex: 1, color: 'text.secondary' }}>
+                  {t(`ui.${key}`)}
+                </Typography>
+                <Box sx={{ 
+                  width: 60, 
+                  height: 6, 
+                  bgcolor: alpha(color, 0.2), 
+                  borderRadius: 1,
+                  overflow: 'hidden'
+                }}>
+                  <Box sx={{ 
+                    width: `${value}%`, 
+                    height: '100%', 
+                    bgcolor: color,
+                    transition: 'width 0.3s ease'
+                  }} />
+                </Box>
+                <Typography variant="caption" sx={{ width: 30, textAlign: 'right', color, fontWeight: 600 }}>
+                  {value}%
+                </Typography>
+              </Box>
+            ))}
           </Stack>
         </Box>
       </Stack>

@@ -1,5 +1,12 @@
 export const translations = {
   en: {
+    app: {
+      title: 'Climate Visualization',
+      subtitle: 'Interactive climate change scenarios'
+    },
+    errors: {
+      noData: 'No data available'
+    },
     regions: {
       title: 'Regional Impacts',
       subtitle: 'Temperature change since 2025',
@@ -7,6 +14,7 @@ export const translations = {
       southEurope: 'Southern Europe',
       northAmerica: 'North America',
       asia: 'Asia',
+      africa: 'Africa',
       southernHemisphere: 'Southern Hemisphere',
       average: 'Average',
     },
@@ -72,6 +80,13 @@ export const translations = {
     }
   },
   de: {
+    app: {
+      title: 'Klima-Visualisierung',
+      subtitle: 'Interaktive Klimawandel-Szenarien'
+    },
+    errors: {
+      noData: 'Keine Daten verfügbar'
+    },
     regions: {
       title: 'Regionale Auswirkungen',
       subtitle: 'Temperaturänderung seit 2025',
@@ -79,6 +94,7 @@ export const translations = {
       southEurope: 'Südeuropa',
       northAmerica: 'Nordamerika',
       asia: 'Asien',
+      africa: 'Afrika',
       southernHemisphere: 'Südliche Hemisphäre',
       average: 'Durchschnitt',
     },

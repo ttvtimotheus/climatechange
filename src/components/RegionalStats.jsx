@@ -16,13 +16,13 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { useLanguage } from '../contexts/LanguageContext';
 
-// Regionen-Gruppierung
+// Regional grouping matching actual cities from globeService
 const REGIONS = {
-  northEurope: ['Berlin', 'London', 'Moscow'],
-  southEurope: ['Paris', 'Madrid', 'Rom'],
-  northAmerica: ['New York', 'Los Angeles', 'Toronto'],
-  asia: ['Tokyo', 'Beijing', 'Seoul'],
-  southernHemisphere: ['Sydney', 'Rio', 'Cape Town']
+  northEurope: ['Berlin', 'London', 'Moscow', 'Paris'],
+  northAmerica: ['New York'],
+  asia: ['Tokyo', 'Beijing', 'Mumbai', 'Dubai', 'Singapore'],
+  africa: ['Lagos', 'Cape Town'],
+  southernHemisphere: ['Sydney', 'Rio', 'Buenos Aires']
 };
 
 const getTemperatureColor = (value, theme) => {

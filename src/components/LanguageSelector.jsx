@@ -1,30 +1,34 @@
 import React from 'react';
 import { 
   IconButton, 
-  Tooltip
+  Tooltip,
+  Typography,
+  Box
 } from '@mui/material';
-import { Language as LanguageIcon } from '@mui/icons-material';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const LanguageSelector = () => {
   const { language, toggleLanguage, t } = useLanguage();
 
   return (
-    <Tooltip title={t('ui.languageSelect')} placement="left">
+    <Tooltip title={t('ui.languageSelect')}>
       <IconButton
         onClick={toggleLanguage}
+        size="small"
         sx={{
-          position: 'fixed',
-          right: 16,
-          top: 16,
-          bgcolor: 'background.paper',
-          boxShadow: 2,
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: 1,
+          px: 1.5,
+          py: 0.5,
           '&:hover': {
-            bgcolor: 'background.paper',
+            bgcolor: 'action.hover',
           },
         }}
       >
-        <LanguageIcon />
+        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
+          {language.toUpperCase()}
+        </Typography>
       </IconButton>
     </Tooltip>
   );

@@ -51,7 +51,7 @@ const calculateMovingAverage = (data, windowSize) => {
   return result;
 };
 
-const GreenhouseEffect = ({ climateData, onWindowSizeChange }) => {
+const GreenhouseEffect = ({ climateData }) => {
   const [windowSize, setWindowSize] = useState(20);
   const [movingAverages, setMovingAverages] = useState({
     temperature: [],
@@ -161,7 +161,6 @@ const GreenhouseEffect = ({ climateData, onWindowSizeChange }) => {
 
   const handleWindowSizeChange = (event, newValue) => {
     setWindowSize(newValue);
-    onWindowSizeChange?.(newValue);
   };
 
   return (

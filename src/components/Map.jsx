@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Box, 
   IconButton, 
@@ -8,7 +8,9 @@ import {
   Tooltip,
   useTheme,
   useMediaQuery,
-  Typography
+  Typography,
+  Chip,
+  alpha
 } from '@mui/material';
 import { 
   PlayArrow, 
@@ -16,7 +18,8 @@ import {
   TrendingUp,
   TrendingDown,
   Timeline,
-  Menu as MenuIcon
+  ChevronLeft,
+  ChevronRight
 } from '@mui/icons-material';
 import WorldMap from './WorldMap';
 import RegionalStats from './RegionalStats';
@@ -25,39 +28,44 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 const YEAR_MIN = 2025;
 const YEAR_MAX = 2100;
-const ANIMATION_INTERVAL = 500; // milliseconds
+const ANIMATION_INTERVAL = 300;
 
 const SCENARIOS = {
   optimistic: {
-    icon: <TrendingDown />
+    icon: <TrendingDown fontSize="small" />,
+    color: '#10B981'
   },
   moderate: {
-    icon: <Timeline />
+    icon: <Timeline fontSize="small" />,
+    color: '#F59E0B'
   },
   pessimistic: {
-    icon: <TrendingUp />
+    icon: <TrendingUp fontSize="small" />,
+    color: '#EF4444'
   }
 };
 
-const Map = ({ selectedYear = 2025, onYearChange }) => {
+const Map = ({ 
+  selectedYear = 2025, 
+  selectedScenario = 'moderate',
+  onYearChange,
+  onScenarioChange 
+}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [isStatsOpen, setIsStatsOpen] = useState(!isMobile);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentYear, setCurrentYear] = useState(selectedYear);
-  const [scenario, setScenario] = useState('moderate');
-  const [globeData, setGlobeData] = useState([]);
   const { t } = useLanguage();
 
-  const updateGlobeData = useCallback((year, currentScenario) => {
-    const data = generateGlobeData(currentScenario, year);
-    setGlobeData(data);
-  }, []);
+  // Generate globe data based on scenario and year
+  const globeData = useMemo(() => {
+    return generateGlobeData(selectedScenario, currentYear);
+  }, [selectedScenario, currentYear]);
 
   useEffect(() => {
     setCurrentYear(selectedYear);
-    updateGlobeData(selectedYear, scenario);
-  }, [selectedYear, updateGlobeData, scenario]);
+  }, [selectedYear]);
 
   useEffect(() => {
     if (isPlaying) {
@@ -76,11 +84,10 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
   }, [isPlaying]);
 
   useEffect(() => {
-    updateGlobeData(currentYear, scenario);
-    if (onYearChange) {
+    if (onYearChange && currentYear !== selectedYear) {
       onYearChange(currentYear);
     }
-  }, [currentYear, updateGlobeData, onYearChange, scenario]);
+  }, [currentYear, onYearChange, selectedYear]);
 
   const handleSliderChange = (event, newValue) => {
     setCurrentYear(newValue);
@@ -91,7 +98,9 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
   };
 
   const handleScenarioChange = (newScenario) => {
-    setScenario(newScenario);
+    if (onScenarioChange) {
+      onScenarioChange(newScenario);
+    }
   };
 
   const toggleStats = () => {
@@ -102,23 +111,23 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
     <Box sx={{ 
       position: 'relative', 
       width: '100%', 
-      height: '100vh',
+      height: '100%',
       bgcolor: theme.palette.background.default,
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Hauptbereich mit Karte und Statistiken */}
+      {/* Main area with map */}
       <Box sx={{ 
         flex: 1,
         display: 'flex',
         position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* RegionalStats Sidebar */}
+        {/* Regional Stats Sidebar */}
         <Box sx={{ 
-          width: 300,
+          width: 280,
           height: '100%',
-          position: isMobile ? 'absolute' : 'relative',
+          position: 'absolute',
           left: 0,
           top: 0,
           transform: isStatsOpen ? 'translateX(0)' : 'translateX(-100%)',
@@ -127,12 +136,35 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
           bgcolor: 'background.paper',
           borderRight: 1,
           borderColor: 'divider',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          boxShadow: isStatsOpen ? 4 : 0
         }}>
           <RegionalStats data={globeData} year={currentYear} />
         </Box>
 
-        {/* Karte */}
+        {/* Toggle Stats Button */}
+        <IconButton 
+          onClick={toggleStats}
+          size="small"
+          sx={{
+            position: 'absolute',
+            left: isStatsOpen ? 280 : 0,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 1001,
+            bgcolor: 'background.paper',
+            borderRadius: '0 8px 8px 0',
+            boxShadow: 2,
+            transition: 'left 0.3s ease',
+            '&:hover': {
+              bgcolor: 'action.hover',
+            }
+          }}
+        >
+          {isStatsOpen ? <ChevronLeft /> : <ChevronRight />}
+        </IconButton>
+
+        {/* Map */}
         <Box sx={{ 
           flex: 1,
           height: '100%',
@@ -143,136 +175,110 @@ const Map = ({ selectedYear = 2025, onYearChange }) => {
             year={currentYear}
           />
 
-          {/* Szenario-Auswahl über der Karte */}
+          {/* Scenario Selection */}
           <Box sx={{ 
             position: 'absolute',
-            top: 16,
+            top: 12,
             left: '50%',
             transform: 'translateX(-50%)',
-            zIndex: 1000,
+            zIndex: 100,
             display: 'flex',
-            gap: 2,
-            alignItems: 'center'
+            gap: 1
           }}>
-            {isMobile && (
-              <IconButton 
-                onClick={toggleStats} 
-                color="primary"
-                sx={{
-                  bgcolor: theme.palette.action.hover,
-                  '&:hover': {
-                    bgcolor: theme.palette.action.selected,
-                  }
-                }}
-              >
-                <MenuIcon />
-              </IconButton>
-            )}
-            <ButtonGroup 
-              variant="contained" 
-              size="small"
-              sx={{ 
-                bgcolor: theme.palette.action.hover,
-                backdropFilter: 'blur(8px)',
-                '& .MuiButton-root': {
-                  textTransform: 'none',
-                  px: 2,
-                  py: 1
-                }
-              }}
-            >
-              {Object.entries(SCENARIOS).map(([key, { icon }]) => (
-                <Button
-                  key={key}
+            {Object.entries(SCENARIOS).map(([key, { icon, color }]) => (
+              <Tooltip key={key} title={t(`scenarios.${key}.description`)}>
+                <Chip
+                  icon={icon}
+                  label={t(`scenarios.${key}.label`)}
                   onClick={() => handleScenarioChange(key)}
-                  variant={scenario === key ? 'contained' : 'outlined'}
-                  startIcon={icon}
+                  size="small"
                   sx={{
-                    bgcolor: scenario === key 
-                      ? theme.palette.primary.main
-                      : theme.palette.action.hover,
+                    bgcolor: selectedScenario === key 
+                      ? alpha(color, 0.2)
+                      : alpha(theme.palette.background.paper, 0.9),
+                    color: selectedScenario === key ? color : 'text.primary',
+                    border: 1,
+                    borderColor: selectedScenario === key ? color : 'divider',
+                    fontWeight: selectedScenario === key ? 600 : 400,
+                    backdropFilter: 'blur(8px)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
                     '&:hover': {
-                      bgcolor: scenario === key 
-                        ? theme.palette.primary.main
-                        : theme.palette.action.selected,
+                      bgcolor: alpha(color, 0.15),
+                    },
+                    '& .MuiChip-icon': {
+                      color: selectedScenario === key ? color : 'text.secondary'
                     }
                   }}
-                >
-                  <Tooltip title={t(`scenarios.${key}.description`)}>
-                    <span>{t(`scenarios.${key}.label`)}</span>
-                  </Tooltip>
-                </Button>
-              ))}
-            </ButtonGroup>
+                />
+              </Tooltip>
+            ))}
           </Box>
         </Box>
       </Box>
 
-      {/* Zeitleiste */}
+      {/* Timeline */}
       <Box sx={{
-        p: 2,
-        bgcolor: theme.palette.action.hover,
+        p: 1.5,
+        px: 2,
+        bgcolor: alpha(theme.palette.background.paper, 0.95),
         backdropFilter: 'blur(8px)',
         borderTop: 1,
-        borderColor: theme.palette.divider,
+        borderColor: 'divider',
         display: 'flex',
         alignItems: 'center',
-        gap: 3,
-        position: 'relative',
-        zIndex: 1000
+        gap: 2
       }}>
         <IconButton 
           onClick={handlePlayPause} 
-          color="primary"
+          size="small"
           sx={{ 
-            bgcolor: theme.palette.action.hover,
+            bgcolor: 'primary.main',
+            color: 'white',
             '&:hover': {
-              bgcolor: theme.palette.action.selected,
+              bgcolor: 'primary.dark',
             }
           }}
         >
-          {isPlaying ? <Pause /> : <PlayArrow />}
+          {isPlaying ? <Pause fontSize="small" /> : <PlayArrow fontSize="small" />}
         </IconButton>
 
-        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            {YEAR_MIN}
-          </Typography>
-          
-          <Slider
-            value={currentYear}
-            min={YEAR_MIN}
-            max={YEAR_MAX}
-            onChange={handleSliderChange}
-            valueLabelDisplay="on"
-            valueLabelFormat={value => `${value}`}
-            sx={{ 
-              flex: 1,
-              '& .MuiSlider-valueLabel': {
-                bgcolor: theme.palette.primary.main
-              },
-              '& .MuiSlider-thumb': {
-                width: 16,
-                height: 16,
-                '&:hover, &.Mui-focusVisible': {
-                  boxShadow: `0 0 0 8px ${theme.palette.primary.main}`
-                }
-              },
-              '& .MuiSlider-track': {
-                height: 4,
-                bgcolor: theme.palette.primary.main
-              },
-              '& .MuiSlider-rail': {
-                height: 4,
-                bgcolor: theme.palette.primary.main
-              }
-            }}
-          />
+        <Typography variant="caption" color="text.secondary" sx={{ minWidth: 35 }}>
+          {YEAR_MIN}
+        </Typography>
+        
+        <Slider
+          value={currentYear}
+          min={YEAR_MIN}
+          max={YEAR_MAX}
+          onChange={handleSliderChange}
+          valueLabelDisplay="auto"
+          sx={{ 
+            flex: 1,
+            '& .MuiSlider-thumb': {
+              width: 14,
+              height: 14,
+            },
+            '& .MuiSlider-track': {
+              height: 4,
+            },
+            '& .MuiSlider-rail': {
+              height: 4,
+              opacity: 0.3
+            }
+          }}
+        />
 
-          <Typography variant="body2" color="text.secondary">
-            {YEAR_MAX}
-          </Typography>
-        </Box>
+        <Typography variant="caption" color="text.secondary" sx={{ minWidth: 35 }}>
+          {YEAR_MAX}
+        </Typography>
+        
+        <Chip 
+          label={currentYear} 
+          size="small" 
+          color="primary"
+          sx={{ fontWeight: 600, minWidth: 60 }}
+        />
       </Box>
     </Box>
   );
